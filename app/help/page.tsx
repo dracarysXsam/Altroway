@@ -4,26 +4,26 @@ import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 
-export default function LegalSupportPage() {
+export default function HelpPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <Header />
       <div className="container mx-auto px-4 py-8">
         <Card>
           <CardHeader>
-            <CardTitle>Legal Support</CardTitle>
+            <CardTitle>Help Center</CardTitle>
           </CardHeader>
           <CardContent>
             <p>
-              Navigating the legal requirements for working in a new country can be challenging. Our team of legal
-              experts is here to help you with visa applications, work permits, and other legal documents.
+              Welcome to the Altroway Help Center. Here you can find answers to frequently asked questions and get in
+              touch with our support team.
             </p>
             <p className="mt-4">
-              Please contact us at{" "}
-              <a href="mailto:legal@altroway.com" className="text-blue-600">
-                legal@altroway.com
-              </a>{" "}
-              for more information.
+              If you need assistance, please email us at{" "}
+              <a href="mailto:support@altroway.com" className="text-blue-600">
+                support@altroway.com
+              </a>
+              .
             </p>
           </CardContent>
         </Card>
