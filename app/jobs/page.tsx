@@ -99,6 +99,15 @@ export default function JobsPage() {
   const [selectedIndustry, setSelectedIndustry] = useState("All Industries")
   const [visaSponsorship, setVisaSponsorship] = useState(false)
   const [urgentOnly, setUrgentOnly] = useState(false)
+  const [savedJobs, setSavedJobs] = useState<number[]>([])
+
+  const handleBookmark = (jobId: number) => {
+    if (savedJobs.includes(jobId)) {
+      setSavedJobs(savedJobs.filter((id) => id !== jobId))
+    } else {
+      setSavedJobs([...savedJobs, jobId])
+    }
+  }
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
@@ -264,7 +273,7 @@ export default function JobsPage() {
                         <Link href={`/jobs/${job.id}/apply`}>
                           <Button size="sm">Apply Now</Button>
                         </Link>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant={savedJobs.includes(job.id) ? "default" : "outline"} onClick={() => handleBookmark(job.id)}>
                           <Bookmark className="h-4 w-4" />
                         </Button>
                       </div>
