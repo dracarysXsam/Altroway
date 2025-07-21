@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Search, MapPin, Clock, Euro, Building, Zap, Bookmark } from "lucide-react"
+import Link from "next/link"
 
 const jobs = [
   {
@@ -260,7 +261,9 @@ export default function JobsPage() {
                         </div>
                       </div>
                       <div className="flex flex-col gap-2 ml-4">
-                        <Button size="sm">Apply Now</Button>
+                        <Link href={`/jobs/${job.id}/apply`}>
+                          <Button size="sm">Apply Now</Button>
+                        </Link>
                         <Button size="sm" variant="outline">
                           <Bookmark className="h-4 w-4" />
                         </Button>
