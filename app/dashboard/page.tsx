@@ -25,6 +25,7 @@ import {
 } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import Link from "next/link"
 
 export default function DashboardPage() {
   const [profileCompletion] = useState(75)
@@ -327,7 +328,9 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <Button className="w-full">Complete Profile</Button>
+                  <Link href="/profile/edit">
+                    <Button className="w-full">Complete Profile</Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
