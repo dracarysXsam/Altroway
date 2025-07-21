@@ -245,7 +245,9 @@ export default function JobsPage() {
                         <div className="flex items-center gap-4 text-gray-600 mb-2">
                           <div className="flex items-center gap-1">
                             <Building className="h-4 w-4" />
-                            <span>{job.company}</span>
+                            <Link href={`/companies/${job.id}`}>
+                              <span>{job.company}</span>
+                            </Link>
                           </div>
                           <div className="flex items-center gap-1">
                             <MapPin className="h-4 w-4" />
