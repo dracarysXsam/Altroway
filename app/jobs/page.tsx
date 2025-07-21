@@ -10,6 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Search, MapPin, Clock, Euro, Building, Zap, Bookmark } from "lucide-react"
+import Link from "next/link"
 
 const jobs = [
   {
@@ -98,6 +99,15 @@ export default function JobsPage() {
   const [selectedIndustry, setSelectedIndustry] = useState("All Industries")
   const [visaSponsorship, setVisaSponsorship] = useState(false)
   const [urgentOnly, setUrgentOnly] = useState(false)
+  const [savedJobs, setSavedJobs] = useState<number[]>([])
+
+  const handleBookmark = (jobId: number) => {
+    if (savedJobs.includes(jobId)) {
+      setSavedJobs(savedJobs.filter((id) => id !== jobId))
+    } else {
+      setSavedJobs([...savedJobs, jobId])
+    }
+  }
 
   const filteredJobs = jobs.filter((job) => {
     const matchesSearch =
@@ -260,8 +270,10 @@ export default function JobsPage() {
                         </div>
                       </div>
                       <div className="flex flex-col gap-2 ml-4">
-                        <Button size="sm">Apply Now</Button>
-                        <Button size="sm" variant="outline">
+                        <Link href={`/jobs/${job.id}/apply`}>
+                          <Button size="sm">Apply Now</Button>
+                        </Link>
+                        <Button size="sm" variant={savedJobs.includes(job.id) ? "default" : "outline"} onClick={() => handleBookmark(job.id)}>
                           <Bookmark className="h-4 w-4" />
                         </Button>
                       </div>

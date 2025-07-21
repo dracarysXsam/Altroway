@@ -23,6 +23,9 @@ import {
   Users,
   BookOpen,
 } from "lucide-react"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import Link from "next/link"
 
 export default function DashboardPage() {
   const [profileCompletion] = useState(75)
@@ -251,10 +254,15 @@ export default function DashboardPage() {
                   <CardDescription>Upload new documents or manage existing ones</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <Button className="w-full justify-start bg-transparent" variant="outline">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload New Document
-                  </Button>
+                  <Input type="file" id="file-upload" className="hidden" />
+                  <Label htmlFor="file-upload" className="w-full">
+                    <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
+                      <div>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Upload New Document
+                      </div>
+                    </Button>
+                  </Label>
                   <Button className="w-full justify-start bg-transparent" variant="outline">
                     <FileText className="mr-2 h-4 w-4" />
                     Generate Visa Application
@@ -320,7 +328,9 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                  <Button className="w-full">Complete Profile</Button>
+                  <Link href="/profile/edit">
+                    <Button className="w-full">Complete Profile</Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>
