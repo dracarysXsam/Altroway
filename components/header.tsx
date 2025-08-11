@@ -1,45 +1,13 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { MapPin, FileText, Users, BookOpen, Bell } from "lucide-react"
+import { MapPin, FileText, Users, BookOpen } from "lucide-react"
 import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { MobileNav } from "./mobile-nav" // Add this import
-import { createClient } from "@/lib/supabase/client"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
 
 export function Header() {
   const [isMenuOpen, setIsMenuOpen] = useState(false)
-  const [notifications, setNotifications] = useState<any[]>([])
-  const supabase = createClient()
-
-  useEffect(() => {
-    const channel = supabase
-      .channel("realtime-notifications")
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "notifications",
-        },
-        (payload) => {
-          setNotifications((prev) => [...prev, payload.new])
-        }
-      )
-      .subscribe()
-
-    return () => {
-      supabase.removeChannel(channel)
-    }
-  }, [])
 
   return (
     <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
@@ -69,28 +37,6 @@ export function Header() {
           </nav>
           {/* Desktop Auth Buttons */}
           <div className="hidden md:flex items-center space-x-4">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Bell className="h-5 w-5" />
-                  {notifications.length > 0 && (
-                    <span className="absolute top-2 right-2 block h-2 w-2 rounded-full bg-red-500" />
-                  )}
-                  <span className="sr-only">Notifications</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent>
-                <DropdownMenuLabel>Notifications</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                {notifications.length > 0 ? (
-                  notifications.map((notification) => (
-                    <DropdownMenuItem key={notification.id}>{notification.message}</DropdownMenuItem>
-                  ))
-                ) : (
-                  <DropdownMenuItem>No new notifications</DropdownMenuItem>
-                )}
-              </DropdownMenuContent>
-            </DropdownMenu>
             <Button variant="ghost" asChild>
               <Link href="/login">Sign In</Link>
             </Button>
