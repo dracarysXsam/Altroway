@@ -2,49 +2,62 @@
 
 import type React from "react"
 
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import Link from "next/link"
-import { useState } from "react"
-import { useRouter } from "next/navigation"
-import { createClient } from "@/lib/supabase/client"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Terminal, CheckCircle } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Terminal, CheckCircle } from "lucide-react";
+import { createProfileOnSignUp } from "@/app/actions/profile-actions";
 
 export default function RegisterPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<string | null>(null)
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const router = useRouter()
-  const supabase = createClient()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [role, setRole] = useState<'job_seeker' | 'employer' | 'legal_advisor'>("job_seeker");
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const router = useRouter();
+  const supabase = createClient();
 
   const handleSignUp = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setSuccess(null)
-    setIsSubmitting(true)
+    e.preventDefault();
+    setError(null);
+    setSuccess(null);
+    setIsSubmitting(true);
 
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error: signUpError } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${location.origin}/auth/callback`, // This URL will be handled later
+        emailRedirectTo: `${location.origin}/auth/callback`,
       },
-    })
+    });
 
-    if (error) {
-      setError(error.message)
-    } else if (data.user) {
-      setSuccess("Account created successfully! Please check your email for a verification link.")
-      // Optionally redirect after a short delay
-      // setTimeout(() => router.push('/login'), 3000);
+    if (signUpError) {
+      setError(signUpError.message);
+      setIsSubmitting(false);
+      return;
     }
-    setIsSubmitting(false)
-  }
+
+    if (data.user) {
+      // After successful sign-up, create the profile
+      const profileResult = await createProfileOnSignUp(role);
+      if (profileResult.status === "error") {
+        // This is a tricky state. The user is created in Auth, but their profile failed.
+        // For now, we'll show an error. A more robust solution might involve a retry mechanism or cleanup.
+        setError(`Your account was created, but we failed to set up your profile: ${profileResult.message}. Please contact support.`);
+      } else {
+        setSuccess("Account created successfully! Please check your email for a verification link.");
+      }
+    }
+    setIsSubmitting(false);
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4 py-12 sm:px-6 lg:px-8">
@@ -77,6 +90,19 @@ export default function RegisterPage() {
                 onChange={(e) => setPassword(e.target.value)}
                 autoComplete="new-password"
               />
+            </div>
+            <div>
+              <Label htmlFor="role">I am a...</Label>
+              <Select onValueChange={(value) => setRole(value as any)} defaultValue={role}>
+                <SelectTrigger id="role">
+                  <SelectValue placeholder="Select your role" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="job_seeker">Job Seeker</SelectItem>
+                  <SelectItem value="employer">Employer</SelectItem>
+                  <SelectItem value="legal_advisor">Legal Advisor</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             {error && (
               <Alert variant="destructive">
