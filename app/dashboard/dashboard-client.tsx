@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -22,6 +23,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { DocumentUploadForm } from "./document-upload-form";
 
 // Define types for the data props
 type Application = {
@@ -73,6 +76,8 @@ const getStatusColor = (status: string) => {
 };
 
 export function DashboardClient({ applications, documents, profileCompletion }: DashboardClientProps) {
+  const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
+
   return (
     <Tabs defaultValue="applications" className="space-y-6">
       <TabsList className="grid w-full grid-cols-4">
@@ -161,15 +166,20 @@ export function DashboardClient({ applications, documents, profileCompletion }: 
               <CardDescription>Upload new documents or manage existing ones</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Input type="file" id="file-upload" className="hidden" />
-              <Label htmlFor="file-upload" className="w-full">
-                <Button className="w-full justify-start bg-transparent" variant="outline" asChild>
-                  <div>
+              <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="w-full justify-start bg-transparent" variant="outline">
                     <Upload className="mr-2 h-4 w-4" />
                     Upload New Document
-                  </div>
-                </Button>
-              </Label>
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Upload Document</DialogTitle>
+                  </DialogHeader>
+                  <DocumentUploadForm onSuccess={() => setUploadDialogOpen(false)} />
+                </DialogContent>
+              </Dialog>
               <Button className="w-full justify-start bg-transparent" variant="outline">
                 <FileText className="mr-2 h-4 w-4" />
                 Generate Visa Application
