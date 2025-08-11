@@ -66,30 +66,3 @@ export async function updateProfile(prevState: any, formData: FormData) {
     return { message: "An unexpected error occurred.", status: "error" };
   }
 }
-
-export async function createProfileOnSignUp(role: 'job_seeker' | 'employer' | 'legal_advisor') {
-  const supabase = createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return { message: "Authentication required to create a profile.", status: "error" };
-  }
-
-  // This function assumes it's called right after sign-up.
-  // A more robust solution would be a database trigger on the auth.users table.
-  const { error } = await supabase.from("profiles").insert({
-    user_id: user.id,
-    role: role,
-    full_name: user.email, // Default full_name to email, user can change it later.
-  });
-
-  if (error) {
-    console.error("Profile Creation Error:", error);
-    return { message: `Failed to create profile: ${error.message}`, status: "error" };
-  }
-
-  return { message: "Profile created successfully.", status: "success" };
-}
