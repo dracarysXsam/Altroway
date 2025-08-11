@@ -6,6 +6,7 @@ import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CheckCircle, MapPin, TrendingUp, Users } from "lucide-react";
 import { DashboardClient } from "./dashboard-client";
+import { RolePlaceholder } from "./role-placeholder";
 
 export default async function DashboardPage() {
   const supabase = createClient();
@@ -17,13 +18,41 @@ export default async function DashboardPage() {
     redirect("/login");
   }
 
-  const [profileData, applicationsData, documentsData] = await Promise.all([
-    supabase.from("profiles").select("full_name").eq("user_id", user.id).single(),
+  // Fetch profile, including the role
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("full_name, role")
+    .eq("user_id", user.id)
+    .single();
+
+  // Redirect to profile edit page if profile is not created yet, which can happen.
+  if (!profile) {
+    redirect("/profile/edit");
+  }
+
+  // Render a different dashboard based on the user's role
+  if (profile.role === "employer" || profile.role === "legal_advisor") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <Header />
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {profile.full_name ?? "User"}!</h1>
+            <p className="text-gray-600">Your Employer Dashboard</p>
+          </div>
+          <RolePlaceholder role={profile.role} />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  // Default to Job Seeker dashboard
+  const [applicationsData, documentsData] = await Promise.all([
     supabase.from("applications").select("*").eq("user_id", user.id),
     supabase.from("documents").select("*").eq("user_id", user.id),
   ]);
 
-  const profile = profileData.data;
   const applications = applicationsData.data ?? [];
   const documents = documentsData.data ?? [];
 
@@ -35,13 +64,12 @@ export default async function DashboardPage() {
       <Header />
 
       <div className="container mx-auto px-4 py-8">
-        {/* Welcome Section */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {profile?.full_name ?? "User"}!</h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {profile.full_name ?? "User"}!</h1>
           <p className="text-gray-600">Track your applications and manage your European job search</p>
         </div>
 
-        {/* Stats Cards */}
+        {/* Stats Cards for Job Seeker */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -53,7 +81,6 @@ export default async function DashboardPage() {
               <p className="text-xs text-muted-foreground">Track your progress</p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Documents Verified</CardTitle>
@@ -66,7 +93,6 @@ export default async function DashboardPage() {
               </p>
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Profile Completion</CardTitle>
@@ -77,7 +103,6 @@ export default async function DashboardPage() {
               <Progress value={profileCompletion} className="mt-2" />
             </CardContent>
           </Card>
-
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Countries Explored</CardTitle>
@@ -90,7 +115,6 @@ export default async function DashboardPage() {
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
         <DashboardClient
           applications={applications}
           documents={documents}
