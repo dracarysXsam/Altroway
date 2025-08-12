@@ -45,22 +45,34 @@ export function Chatbot() {
       const reader = response.body.getReader()
       const decoder = new TextDecoder()
       let assistantResponse = ""
-
       setMessages((prev) => [...prev, { role: "assistant", content: "" }])
 
       while (true) {
         const { done, value } = await reader.read()
         if (done) break
-        const chunk = decoder.decode(value)
-        assistantResponse += chunk
-        setMessages((prev) => {
-          const lastMessage = prev[prev.length - 1]
-          if (lastMessage.role === "assistant") {
-            lastMessage.content = assistantResponse
-            return [...prev.slice(0, -1), lastMessage]
+
+        const chunk = decoder.decode(value, { stream: true })
+        const lines = chunk.split("\n").filter((line) => line.trim() !== "")
+
+        for (const line of lines) {
+          try {
+            const parsed = JSON.parse(line)
+            const content = parsed.choices[0]?.delta?.content
+            if (content) {
+              assistantResponse += content
+              setMessages((prev) => {
+                const lastMessage = prev[prev.length - 1]
+                if (lastMessage.role === "assistant") {
+                  lastMessage.content = assistantResponse
+                  return [...prev.slice(0, -1), lastMessage]
+                }
+                return prev
+              })
+            }
+          } catch (e) {
+            // Ignore parsing errors for non-JSON parts of the stream
           }
-          return prev
-        })
+        }
       }
     } catch (error) {
       console.error("Error sending message:", error)
