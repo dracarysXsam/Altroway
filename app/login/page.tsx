@@ -34,12 +34,14 @@ export default function LoginPage() {
     })
 
     if (error) {
-      setError(error.message)
+      setError(error.message);
+      setIsSubmitting(false);
     } else {
-      setSuccess("Signed in successfully! Redirecting to dashboard...")
-      router.push("/dashboard")
+      setSuccess("Signed in successfully! Redirecting to dashboard...");
+      // Force a refresh of the page to re-fetch the header server component
+      router.refresh();
+      router.push("/dashboard");
     }
-    setIsSubmitting(false)
   }
 
   return (
