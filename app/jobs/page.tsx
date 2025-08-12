@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Search, MapPin, Clock, Euro, Building, Zap, Bookmark } from "lucide-react"
 import Link from "next/link"
@@ -122,8 +121,6 @@ export default function JobsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">

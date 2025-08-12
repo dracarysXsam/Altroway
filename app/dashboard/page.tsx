@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CheckCircle, MapPin, TrendingUp, Users } from "lucide-react";
 import { DashboardClient } from "./dashboard-client";
@@ -34,7 +33,6 @@ export default async function DashboardPage() {
   if (profile.role === "employer" || profile.role === "legal_advisor") {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {profile.full_name ?? "User"}!</h1>
@@ -61,8 +59,6 @@ export default async function DashboardPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {profile.full_name ?? "User"}!</h1>
