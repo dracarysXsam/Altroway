@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { EditProfileForm } from "./edit-profile-form";
 

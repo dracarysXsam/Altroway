@@ -3,14 +3,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge"
 import { ArrowRight, MapPin, FileText, Users, Shield, Search, Clock } from "lucide-react"
 import Link from "next/link"
-import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      <Header />
-
       {/* Hero Section */}
       <section className="container mx-auto px-4 py-16 lg:py-24">
         <div className="text-center max-w-4xl mx-auto">

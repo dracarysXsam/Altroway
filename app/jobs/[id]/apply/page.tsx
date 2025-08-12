@@ -6,7 +6,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, CheckCircle } from "lucide-react"
