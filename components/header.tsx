@@ -34,8 +34,8 @@ export async function Header() {
             <Link href="/legal-support" className="text-gray-600 hover:text-blue-600 transition-colors">
               Legal Support
             </Link>
-            <Link href="/guides" className="text-gray-600 hover:text-blue-600 transition-colors">
-              Guides
+            <Link href="/research" className="text-gray-600 hover:text-blue-600 transition-colors">
+              Research
             </Link>
           </nav>
           {/* Auth Buttons */}
