@@ -2,7 +2,6 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { Header } from "@/components/header";
 import { Footer } from "@/components/footer";
 import { CheckCircle, MapPin, TrendingUp, Users } from "lucide-react";
 import { DashboardClient } from "./dashboard-client";

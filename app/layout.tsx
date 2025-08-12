@@ -4,6 +4,8 @@ import { Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider"
 import { Chatbot } from "@/components/chatbot/chatbot"
 import { Toaster } from "@/components/ui/sonner"
+import { Header } from "@/components/header"
+import { createClient } from "@/lib/supabase/server"
 import "./globals.css"
 
 const inter = Inter({ subsets: ["latin"] })
@@ -14,15 +16,21 @@ export const metadata: Metadata = {
   generator: "v0.dev",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
+  const supabase = createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+          <Header user={user} />
           {children}
           <Chatbot />
           <Toaster />

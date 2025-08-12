@@ -1,17 +1,12 @@
-import { Button } from "@/components/ui/button";
-import { MapPin } from "lucide-react";
-import Link from "next/link";
-import { MobileNav } from "./mobile-nav";
-import { createClient } from "@/lib/supabase/server";
-import { UserMenu } from "./user-menu";
-import { logout } from "@/app/actions/auth-actions";
+import { Button } from "@/components/ui/button"
+import { MapPin } from "lucide-react"
+import Link from "next/link"
+import { MobileNav } from "./mobile-nav"
+import { UserMenu } from "./user-menu"
+import { logout } from "@/app/actions/auth-actions"
+import type { User } from "@supabase/supabase-js"
 
-export async function Header() {
-  const supabase = createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+export function Header({ user }: { user: User | null }) {
   return (
     <header className="bg-white/95 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-50">
       <div className="container mx-auto px-4">
@@ -58,5 +53,5 @@ export async function Header() {
         </div>
       </div>
     </header>
-  );
+  )
 }

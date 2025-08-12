@@ -1,6 +1,5 @@
 "use client"
 
-import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
@@ -9,7 +8,6 @@ import { Shield, FileText, Briefcase } from "lucide-react"
 export default function LegalSupportPage() {
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <main className="container mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <Shield className="h-16 w-16 mx-auto text-blue-600 mb-4" />
