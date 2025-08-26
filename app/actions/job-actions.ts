@@ -270,11 +270,16 @@ export async function applyToJob(jobId: string, coverLetter: string, resumeFile?
 
     // Create conversation for this application
     if (application) {
-      await supabase
+      const { error: conversationError } = await supabase
         .from("conversations")
         .insert({
           job_application_id: application.id,
         });
+      
+      if (conversationError) {
+        console.error("Error creating conversation:", conversationError);
+        // Don't fail the application if conversation creation fails
+      }
     }
 
     revalidatePath("/dashboard");

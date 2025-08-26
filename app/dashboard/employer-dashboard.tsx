@@ -14,6 +14,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { useFormState, useFormStatus } from "react-dom";
 import { createJob, updateJob, deleteJob } from "@/app/actions/job-actions";
+import { getEmployerApplications, updateApplicationStatus, sendMessageToApplicant } from "@/app/actions/application-actions";
+import { testEmployerAccess } from "@/app/actions/test-actions";
 import { createClient } from "@/lib/supabase/client";
 import { 
   Plus, 
@@ -48,12 +50,23 @@ type Job = {
 type Application = {
   id: string;
   applicant: {
+    id: string;
     full_name: string;
     email: string;
+    avatar_url?: string;
+    headline?: string;
+    skills?: string;
+  };
+  job: {
+    id: string;
+    title: string;
+    company: string;
+    location: string;
   };
   status: string;
   applied_at: string;
   cover_letter?: string;
+  resume_path?: string;
 };
 
 const initialState = {
@@ -83,6 +96,11 @@ export function EmployerDashboard() {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
+  const [selectedApplication, setSelectedApplication] = useState<Application | null>(null);
+  const [isMessageDialogOpen, setIsMessageDialogOpen] = useState(false);
+  const [messageText, setMessageText] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [state, dispatch] = useFormState(createJob, initialState);
   const supabase = createClient();
 
@@ -160,8 +178,20 @@ export function EmployerDashboard() {
   }, [state]);
 
   useEffect(() => {
-    fetchJobs();
-    fetchApplications();
+    const initializeDashboard = async () => {
+      setIsLoading(true);
+      setError(null);
+      try {
+        await Promise.all([fetchJobs(), fetchApplications()]);
+      } catch (err) {
+        setError("Failed to load dashboard data");
+        console.error("Dashboard initialization error:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeDashboard();
   }, []);
 
   // Handle form state changes
@@ -215,21 +245,13 @@ export function EmployerDashboard() {
   };
 
   const fetchApplications = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    const { data: applicationsData } = await supabase
-      .from("job_applications")
-      .select(`
-        *,
-        applicant:profiles!job_applications_applicant_id_fkey(full_name, email)
-      `)
-      .eq("jobs.employer_id", user.id)
-      .order("applied_at", { ascending: false });
-
-    if (applicationsData) {
-      setApplications(applicationsData);
+    const result = await getEmployerApplications();
+    if (result.error) {
+      console.error("Error fetching applications:", result.error);
+      return;
     }
+    // Handle both empty array and undefined cases
+    setApplications(result.applications || []);
   };
 
   const handleDeleteJob = async (jobId: string) => {
@@ -238,6 +260,39 @@ export function EmployerDashboard() {
       if (result.status === "success") {
         fetchJobs();
       }
+    }
+  };
+
+  const handleUpdateApplicationStatus = async (applicationId: string, newStatus: string) => {
+    const result = await updateApplicationStatus(applicationId, newStatus);
+    if (result.success) {
+      fetchApplications();
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!selectedApplication || !messageText.trim()) return;
+    
+    const result = await sendMessageToApplicant(selectedApplication.id, messageText.trim());
+    if (result.success) {
+      setMessageText("");
+      setIsMessageDialogOpen(false);
+      setSelectedApplication(null);
+      // Optionally redirect to conversation
+      if (result.conversationId) {
+        window.location.href = `/messages/${result.conversationId}`;
+      }
+    }
+  };
+
+  const handleTestAccess = async () => {
+    const result = await testEmployerAccess();
+    if (result.success) {
+      alert(`Test Result: ${result.message}`);
+      console.log("Test result:", result);
+    } else {
+      alert(`Test Error: ${result.error}`);
+      console.error("Test error:", result.error);
     }
   };
 
@@ -260,6 +315,37 @@ export function EmployerDashboard() {
       default: return "bg-gray-100 text-gray-800";
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="space-y-6">
+        <div className="text-center py-12">
+          <Alert variant="destructive">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>{error}</AlertDescription>
+          </Alert>
+          <Button 
+            onClick={() => window.location.reload()} 
+            className="mt-4"
+          >
+            Retry
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -666,21 +752,28 @@ export function EmployerDashboard() {
                         </div>
                       </div>
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4" />
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Edit className="h-4 w-4" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        onClick={() => handleDeleteJob(job.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
+                                         <div className="flex gap-2">
+                       <Button size="sm" variant="outline">
+                         <Eye className="h-4 w-4" />
+                       </Button>
+                       <Button 
+                         size="sm" 
+                         variant="outline"
+                         onClick={() => {
+                           setSelectedJob(job);
+                           setIsEditDialogOpen(true);
+                         }}
+                       >
+                         <Edit className="h-4 w-4" />
+                       </Button>
+                       <Button 
+                         size="sm" 
+                         variant="outline" 
+                         onClick={() => handleDeleteJob(job.id)}
+                       >
+                         <Trash2 className="h-4 w-4" />
+                       </Button>
+                     </div>
                   </div>
                 </CardHeader>
               </Card>
@@ -703,7 +796,12 @@ export function EmployerDashboard() {
         </TabsContent>
 
         <TabsContent value="applications" className="space-y-4">
-          <h2 className="text-2xl font-bold">Job Applications</h2>
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-bold">Job Applications</h2>
+            <Button onClick={handleTestAccess} variant="outline" size="sm">
+              Test Access
+            </Button>
+          </div>
           
           <div className="grid gap-4">
             {applications.map((application) => (
@@ -716,29 +814,66 @@ export function EmployerDashboard() {
                         <Badge className={getApplicationStatusColor(application.status)}>
                           {application.status}
                         </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {application.job.title} at {application.job.company}
+                        </Badge>
                       </div>
                       <div className="flex items-center gap-4 text-gray-600 mb-2">
                         <div className="flex items-center gap-1">
                           <span>{application.applicant.email}</span>
                         </div>
                         <div className="flex items-center gap-1">
+                          <MapPin className="h-4 w-4" />
+                          <span>{application.job.location}</span>
+                        </div>
+                        <div className="flex items-center gap-1">
                           <Calendar className="h-4 w-4" />
                           <span>{new Date(application.applied_at).toLocaleDateString()}</span>
                         </div>
                       </div>
+                      {application.applicant.headline && (
+                        <p className="text-sm text-gray-600 mb-2">
+                          <strong>Headline:</strong> {application.applicant.headline}
+                        </p>
+                      )}
                       {application.cover_letter && (
                         <p className="text-sm text-gray-600 line-clamp-2">
-                          {application.cover_letter}
+                          <strong>Cover Letter:</strong> {application.cover_letter}
                         </p>
                       )}
                     </div>
-                    <div className="flex gap-2">
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-4 w-4" />
+                    <div className="flex flex-col gap-2">
+                      <Select 
+                        value={application.status} 
+                        onValueChange={(value) => handleUpdateApplicationStatus(application.id, value)}
+                      >
+                        <SelectTrigger className="w-32">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="pending">Pending</SelectItem>
+                          <SelectItem value="reviewed">Reviewed</SelectItem>
+                          <SelectItem value="shortlisted">Shortlisted</SelectItem>
+                          <SelectItem value="rejected">Rejected</SelectItem>
+                          <SelectItem value="hired">Hired</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedApplication(application);
+                          setIsMessageDialogOpen(true);
+                        }}
+                      >
+                        Message
                       </Button>
-                      <Button size="sm">
-                        Review
-                      </Button>
+                      {application.resume_path && (
+                        <Button size="sm" variant="outline">
+                          <Eye className="h-4 w-4" />
+                          View Resume
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </CardHeader>
@@ -757,6 +892,101 @@ export function EmployerDashboard() {
           </div>
         </TabsContent>
       </Tabs>
+
+             {/* Edit Job Dialog */}
+       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+         <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+           <DialogHeader>
+             <DialogTitle>Edit Job Posting</DialogTitle>
+           </DialogHeader>
+           {selectedJob && (
+             <form 
+               action={(formData) => updateJob(selectedJob.id, state, formData)}
+               className="space-y-4"
+             >
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <Label htmlFor="edit-title">Job Title *</Label>
+                   <Input 
+                     id="edit-title" 
+                     name="title" 
+                     required 
+                     defaultValue={selectedJob.title}
+                   />
+                 </div>
+                 <div>
+                   <Label htmlFor="edit-company">Company *</Label>
+                   <Input 
+                     id="edit-company" 
+                     name="company" 
+                     required 
+                     defaultValue={selectedJob.company}
+                   />
+                 </div>
+               </div>
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <Label htmlFor="edit-location">Location *</Label>
+                   <Input 
+                     id="edit-location" 
+                     name="location" 
+                     required 
+                     defaultValue={selectedJob.location}
+                   />
+                 </div>
+                 <div>
+                   <Label htmlFor="edit-status">Status</Label>
+                   <Select name="status" defaultValue={selectedJob.status}>
+                     <SelectTrigger>
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="active">Active</SelectItem>
+                       <SelectItem value="paused">Paused</SelectItem>
+                       <SelectItem value="closed">Closed</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+               </div>
+               <div className="flex justify-end gap-2">
+                 <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
+                   Cancel
+                 </Button>
+                 <Button type="submit">Update Job</Button>
+               </div>
+             </form>
+           )}
+         </DialogContent>
+       </Dialog>
+
+       {/* Message Dialog */}
+       <Dialog open={isMessageDialogOpen} onOpenChange={setIsMessageDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Send Message to {selectedApplication?.applicant.full_name}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="message">Message</Label>
+              <Textarea
+                id="message"
+                value={messageText}
+                onChange={(e) => setMessageText(e.target.value)}
+                placeholder="Type your message to the applicant..."
+                className="min-h-[120px]"
+              />
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button variant="outline" onClick={() => setIsMessageDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleSendMessage} disabled={!messageText.trim()}>
+                Send Message
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

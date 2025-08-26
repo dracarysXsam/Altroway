@@ -5,6 +5,7 @@ import { ThemeProvider } from "@/components/theme-provider"
 import { Chatbot } from "@/components/chatbot/chatbot"
 import { Toaster } from "@/components/ui/sonner"
 import { Header } from "@/components/header"
+import { MessageNotification } from "@/components/message-notification"
 import { createClient } from "@/lib/supabase/server"
 import "./globals.css"
 
@@ -34,6 +35,7 @@ export default async function RootLayout({
           {children}
           <Chatbot />
           <Toaster />
+          <MessageNotification />
         </ThemeProvider>
       </body>
     </html>

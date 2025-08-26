@@ -123,10 +123,12 @@ export default async function MessagesPage() {
                           )}
                         </div>
                         
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
-                          <User className="h-4 w-4" />
-                          <span>{applicant?.full_name || 'Unknown'}</span>
-                        </div>
+                                                 <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+                           <User className="h-4 w-4" />
+                           <span>{applicant?.full_name || 'Unknown'}</span>
+                           <span className="text-xs text-muted-foreground">•</span>
+                           <span className="text-xs text-muted-foreground">{job?.title}</span>
+                         </div>
 
                         {lastMessage && (
                           <div className="flex items-center gap-2">
