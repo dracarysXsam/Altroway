@@ -38,20 +38,26 @@ export default function HomePage() {
       <section className="container mx-auto px-4 py-16">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">15,000+</div>
-            <div className="text-gray-600">Active Job Listings</div>
+                      <div className="text-3xl font-bold text-blue-600 mb-2">
+            <span id="job-count">Loading...</span>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">27</div>
-            <div className="text-gray-600">European Countries</div>
+          <div className="text-gray-600">Active Job Listings</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-blue-600 mb-2">27</div>
+          <div className="text-gray-600">European Countries</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-blue-600 mb-2">
+            <span id="relocation-count">Loading...</span>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">5,000+</div>
-            <div className="text-gray-600">Successful Relocations</div>
+          <div className="text-gray-600">Successful Relocations</div>
+        </div>
+        <div className="text-center">
+          <div className="text-3xl font-bold text-blue-600 mb-2">
+            <span id="partner-count">Loading...</span>
           </div>
-          <div className="text-center">
-            <div className="text-3xl font-bold text-blue-600 mb-2">200+</div>
-            <div className="text-gray-600">Legal Partners</div>
+          <div className="text-gray-600">Legal Partners</div>
           </div>
         </div>
       </section>
@@ -172,7 +178,7 @@ export default function HomePage() {
 
       {/* CTA Section */}
       <section className="container mx-auto px-4 py-16">
-        <Card className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0">
+        <Card className="bg-blue-600 text-white border-0 shadow-xl">
           <CardContent className="p-12 text-center">
             <h2 className="text-3xl lg:text-4xl font-bold mb-4">Ready to Start Your European Journey?</h2>
             <p className="text-xl mb-8 opacity-90">

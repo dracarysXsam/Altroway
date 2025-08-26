@@ -10,13 +10,14 @@ import { Terminal, CheckCircle } from "lucide-react";
 import { updateProfile } from "@/app/actions/profile-actions";
 
 type Profile = {
-  id: string;
+  id?: string;
   user_id: string;
   full_name: string | null;
-  created_at: string;
+  created_at?: string;
   headline: string | null;
   skills: string | null;
   portfolio_url: string | null;
+  role?: string;
 };
 
 const initialState = {

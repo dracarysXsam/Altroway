@@ -12,7 +12,7 @@ const ProfileSchema = z.object({
 });
 
 export async function updateProfile(prevState: any, formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },
@@ -39,22 +39,46 @@ export async function updateProfile(prevState: any, formData: FormData) {
   const { fullName, headline, skills, portfolioUrl } = validatedFields.data;
 
   try {
-    const { error } = await supabase
+    // First, check if profile exists
+    const { data: existingProfile } = await supabase
       .from("profiles")
-      .upsert(
-        {
+      .select("id")
+      .eq("user_id", user.id)
+      .single();
+
+    if (existingProfile) {
+      // Update existing profile
+      const { error } = await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName,
+          headline: headline,
+          skills: skills,
+          portfolio_url: portfolioUrl,
+          updated_at: new Date().toISOString(),
+        })
+        .eq("user_id", user.id);
+
+      if (error) {
+        console.error("Database Error:", error);
+        return { message: `Failed to update profile: ${error.message}`, status: "error" };
+      }
+    } else {
+      // Create new profile
+      const { error } = await supabase
+        .from("profiles")
+        .insert({
           user_id: user.id,
           full_name: fullName,
           headline: headline,
           skills: skills,
           portfolio_url: portfolioUrl,
-        },
-        { onConflict: "user_id" }
-      );
+        });
 
-    if (error) {
-      console.error("Database Error:", error);
-      return { message: `Failed to update profile: ${error.message}`, status: "error" };
+      if (error) {
+        console.error("Database Error:", error);
+        return { message: `Failed to create profile: ${error.message}`, status: "error" };
+      }
     }
 
     revalidatePath("/dashboard");
@@ -65,4 +89,24 @@ export async function updateProfile(prevState: any, formData: FormData) {
     console.error("Unhandled Error:", e);
     return { message: "An unexpected error occurred.", status: "error" };
   }
+}
+
+export async function getProfile() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("*")
+    .eq("user_id", user.id)
+    .single();
+
+  return profile;
 }

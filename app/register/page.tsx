@@ -30,11 +30,14 @@ export default function RegisterPage() {
     setSuccess(null);
     setIsSubmitting(true);
 
+    // Use environment variable for redirect URL or fallback to current origin
+    const redirectUrl = process.env.NEXT_PUBLIC_SITE_URL || location.origin;
+    
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
-        emailRedirectTo: `${location.origin}/auth/callback`,
+        emailRedirectTo: `${redirectUrl}/auth/callback`,
         data: {
           role: role,
           full_name: email, // Default full_name to email, user can change it in their profile.

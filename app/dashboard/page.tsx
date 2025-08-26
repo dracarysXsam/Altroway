@@ -3,41 +3,59 @@ import { redirect } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
 import { Footer } from "@/components/footer";
-import { CheckCircle, MapPin, TrendingUp, Users } from "lucide-react";
+import { CheckCircle, MapPin, TrendingUp, Users, Briefcase, Building } from "lucide-react";
 import { DashboardClient } from "./dashboard-client";
 import { RolePlaceholder } from "./role-placeholder";
+import { EmployerDashboard } from "./employer-dashboard";
 
 export default async function DashboardPage() {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },
+    error: authError,
   } = await supabase.auth.getUser();
-  if (!user) {
+  
+  if (authError || !user) {
+    console.error("Auth error:", authError);
     redirect("/login");
   }
 
   // Fetch profile, including the role
   const { data: profile } = await supabase
     .from("profiles")
-    .select("full_name, role")
+    .select("full_name, role, profile_completion")
     .eq("user_id", user.id)
     .single();
 
-  // Redirect to profile edit page if profile is not created yet, which can happen.
+  // Redirect to profile edit page if profile is not created yet
   if (!profile) {
     redirect("/profile/edit");
   }
 
   // Render a different dashboard based on the user's role
-  if (profile.role === "employer" || profile.role === "legal_advisor") {
+  if (profile.role === "employer") {
     return (
       <div className="min-h-screen bg-gray-50">
-        <Header />
         <div className="container mx-auto px-4 py-8">
           <div className="mb-8">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {profile.full_name ?? "User"}!</h1>
             <p className="text-gray-600">Your Employer Dashboard</p>
+          </div>
+          <EmployerDashboard />
+        </div>
+        <Footer />
+      </div>
+    );
+  }
+
+  if (profile.role === "legal_advisor") {
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="container mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {profile.full_name ?? "User"}!</h1>
+            <p className="text-gray-600">Your Legal Advisor Dashboard</p>
           </div>
           <RolePlaceholder role={profile.role} />
         </div>
@@ -47,21 +65,21 @@ export default async function DashboardPage() {
   }
 
   // Default to Job Seeker dashboard
-  const [applicationsData, documentsData] = await Promise.all([
-    supabase.from("applications").select("*").eq("user_id", user.id),
-    supabase.from("documents").select("*").eq("user_id", user.id),
+  const [jobApplicationsData, savedJobsData, jobsData] = await Promise.all([
+    supabase.from("job_applications").select("*").eq("applicant_id", user.id),
+    supabase.from("saved_jobs").select("job_id").eq("user_id", user.id),
+    supabase.from("jobs").select("id, title, company, location").eq("status", "active").limit(5),
   ]);
 
-  const applications = applicationsData.data ?? [];
-  const documents = documentsData.data ?? [];
+  const jobApplications = jobApplicationsData.data ?? [];
+  const savedJobs = savedJobsData.data ?? [];
+  const recentJobs = jobsData.data ?? [];
 
-  // TODO: Calculate this dynamically based on profile fields
-  const profileCompletion = 75;
+  // Calculate profile completion
+  const profileCompletion = profile.profile_completion ?? 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
-
       <div className="container mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Welcome back, {profile.full_name ?? "User"}!</h1>
@@ -73,29 +91,27 @@ export default async function DashboardPage() {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Active Applications</CardTitle>
-              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+              <TrendingUp className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{applications.length}</div>
-              <p className="text-xs text-muted-foreground">Track your progress</p>
+              <div className="text-2xl font-bold">{jobApplications.length}</div>
+              <p className="text-xs text-gray-500">Track your progress</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Documents Verified</CardTitle>
-              <CheckCircle className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Saved Jobs</CardTitle>
+              <Briefcase className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">{documents.filter((d) => d.status === "Verified").length}</div>
-              <p className="text-xs text-muted-foreground">
-                {documents.filter((d) => d.status !== "Verified").length} pending
-              </p>
+              <div className="text-2xl font-bold">{savedJobs.length}</div>
+              <p className="text-xs text-gray-500">Jobs you've saved</p>
             </CardContent>
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Profile Completion</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{profileCompletion}%</div>
@@ -104,19 +120,20 @@ export default async function DashboardPage() {
           </Card>
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Countries Explored</CardTitle>
-              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-sm font-medium">Available Jobs</CardTitle>
+              <Building className="h-4 w-4 text-gray-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">5</div>
-              <p className="text-xs text-muted-foreground">Germany, Netherlands, France</p>
+              <div className="text-2xl font-bold">{recentJobs.length}</div>
+              <p className="text-xs text-gray-500">Recent opportunities</p>
             </CardContent>
           </Card>
         </div>
 
         <DashboardClient
-          applications={applications}
-          documents={documents}
+          jobApplications={jobApplications}
+          savedJobs={savedJobs}
+          recentJobs={recentJobs}
           profileCompletion={profileCompletion}
         />
       </div>

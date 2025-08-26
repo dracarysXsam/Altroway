@@ -10,7 +10,13 @@ import { Footer } from "@/components/footer"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Terminal, CheckCircle } from "lucide-react"
 
-export default function ApplyPage({ params }: { params: { id: string } }) {
+export default async function ApplyPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+  
+  return <ApplyPageClient jobId={id} />;
+}
+
+function ApplyPageClient({ jobId }: { jobId: string }) {
   const [name, setName] = useState("")
   const [email, setEmail] = useState("")
   const [resume, setResume] = useState<File | null>(null)
@@ -36,7 +42,7 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
     // saving the application details to the database.
 
     console.log({
-      jobId: params.id,
+      jobId: jobId,
       name,
       email,
       resume,
@@ -52,11 +58,10 @@ export default function ApplyPage({ params }: { params: { id: string } }) {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      <Header />
       <div className="container mx-auto px-4 py-8">
         <Card className="max-w-2xl mx-auto">
           <CardHeader>
-            <CardTitle>Apply for Job #{params.id}</CardTitle>
+            <CardTitle>Apply for Job #{jobId}</CardTitle>
             <CardDescription>Fill out the form below to submit your application.</CardDescription>
           </CardHeader>
           <CardContent>

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { MapPin } from "lucide-react"
+import { MapPin, MessageSquare } from "lucide-react"
 import Link from "next/link"
 import { MobileNav } from "./mobile-nav"
 import { UserMenu } from "./user-menu"
@@ -25,6 +25,10 @@ export function Header({ user }: { user: User | null }) {
             </Link>
             <Link href="/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">
               Dashboard
+            </Link>
+            <Link href="/messages" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+              <MessageSquare className="h-4 w-4" />
+              Messages
             </Link>
             <Link href="/legal-support" className="text-gray-600 hover:text-blue-600 transition-colors">
               Legal Support

@@ -19,6 +19,10 @@ import {
   Calendar,
   Users,
   BookOpen,
+  Briefcase,
+  Search,
+  Heart,
+  MessageSquare,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,35 +31,54 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { DocumentUploadForm } from "./document-upload-form";
 
 // Define types for the data props
-type Application = {
+type JobApplication = {
   id: string;
-  job_title: string;
-  company: string;
-  location: string;
+  job_id: string;
+  applicant_id: string;
+  cover_letter: string;
+  resume_path: string;
   status: string;
-  applied_date: string;
+  applied_at: string;
+  job?: {
+    title: string;
+    company: string;
+    location: string;
+  };
 };
 
-type Document = {
+type SavedJob = {
   id: string;
-  name: string;
-  type: string;
-  status: string;
+  user_id: string;
+  job_id: string;
+  saved_at: string;
+  job?: {
+    title: string;
+    company: string;
+    location: string;
+  };
+};
+
+type RecentJob = {
+  id: string;
+  title: string;
+  company: string;
+  location: string;
 };
 
 type DashboardClientProps = {
-  applications: Application[];
-  documents: Document[];
+  jobApplications: JobApplication[];
+  savedJobs: SavedJob[];
+  recentJobs: RecentJob[];
   profileCompletion: number;
 };
 
 const getStatusIcon = (status: string) => {
   switch (status) {
-    case "Verified":
+    case "accepted":
       return <CheckCircle className="h-4 w-4 text-green-500" />;
-    case "Processing":
+    case "pending":
       return <Clock className="h-4 w-4 text-yellow-500" />;
-    case "Pending":
+    case "rejected":
       return <AlertCircle className="h-4 w-4 text-red-500" />;
     default:
       return <Clock className="h-4 w-4 text-gray-500" />;
@@ -64,25 +87,26 @@ const getStatusIcon = (status: string) => {
 
 const getStatusColor = (status: string) => {
   switch (status) {
-    case "Under Review":
+    case "accepted":
+      return "bg-green-500";
+    case "pending":
       return "bg-yellow-500";
-    case "Interview Scheduled":
-      return "bg-blue-500";
-    case "Rejected":
+    case "rejected":
       return "bg-red-500";
     default:
       return "bg-gray-500";
   }
 };
 
-export function DashboardClient({ applications, documents, profileCompletion }: DashboardClientProps) {
+export function DashboardClient({ jobApplications, savedJobs, recentJobs, profileCompletion }: DashboardClientProps) {
   const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
 
   return (
     <Tabs defaultValue="applications" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-4">
+      <TabsList className="grid w-full grid-cols-5">
         <TabsTrigger value="applications">Applications</TabsTrigger>
-        <TabsTrigger value="documents">Documents</TabsTrigger>
+        <TabsTrigger value="saved">Saved Jobs</TabsTrigger>
+        <TabsTrigger value="messages">Messages</TabsTrigger>
         <TabsTrigger value="profile">Profile</TabsTrigger>
         <TabsTrigger value="resources">Resources</TabsTrigger>
       </TabsList>
@@ -96,105 +120,155 @@ export function DashboardClient({ applications, documents, profileCompletion }: 
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {applications.map((app) => (
-                <div key={app.id} className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center space-x-4">
-                    <div className={`w-3 h-3 rounded-full ${getStatusColor(app.status)}`}></div>
-                    <div>
-                      <h3 className="font-semibold">{app.job_title}</h3>
-                      <div className="flex items-center space-x-4 text-sm text-gray-600">
-                        <div className="flex items-center space-x-1">
-                          <Building className="h-4 w-4" />
-                          <span>{app.company}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <MapPin className="h-4 w-4" />
-                          <span>{app.location}</span>
-                        </div>
-                        <div className="flex items-center space-x-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>Applied {new Date(app.applied_date).toLocaleDateString()}</span>
+              {jobApplications.length === 0 ? (
+                <div className="text-center py-8">
+                  <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No applications yet</h3>
+                  <p className="text-gray-600 mb-4">Start applying to jobs to track your progress here</p>
+                  <Link href="/jobs">
+                    <Button>
+                      <Search className="mr-2 h-4 w-4" />
+                      Browse Jobs
+                    </Button>
+                  </Link>
+                </div>
+              ) : (
+                jobApplications.map((app) => (
+                  <div key={app.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div className={`w-3 h-3 rounded-full ${getStatusColor(app.status)}`}></div>
+                      <div>
+                        <h3 className="font-semibold">{app.job?.title || "Job Title"}</h3>
+                        <div className="flex items-center space-x-4 text-sm text-gray-600">
+                          <div className="flex items-center space-x-1">
+                            <Building className="h-4 w-4" />
+                            <span>{app.job?.company || "Company"}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="h-4 w-4" />
+                            <span>{app.job?.location || "Location"}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="h-4 w-4" />
+                            <span>Applied {new Date(app.applied_at).toLocaleDateString()}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="secondary" className="capitalize">{app.status}</Badge>
+                      <Button size="sm" variant="outline">
+                        View Details
+                      </Button>
+                    </div>
                   </div>
-                  <div className="flex items-center space-x-2">
-                    <Badge variant="secondary">{app.status}</Badge>
-                    <Button size="sm" variant="outline">
-                      View Details
-                    </Button>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </CardContent>
         </Card>
       </TabsContent>
 
-      {/* Documents Tab */}
-      <TabsContent value="documents">
+      {/* Saved Jobs Tab */}
+      <TabsContent value="saved">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Document Status</CardTitle>
-              <CardDescription>Manage and track your uploaded documents</CardDescription>
+              <CardTitle>Saved Jobs</CardTitle>
+              <CardDescription>Jobs you've saved for later</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {documents.map((doc) => (
-                  <div key={doc.id} className="flex items-center justify-between p-3 border rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="h-5 w-5 text-gray-500" />
-                      <div>
-                        <h4 className="font-medium">{doc.name}</h4>
-                        <p className="text-sm text-gray-600">{doc.type}</p>
+                {savedJobs.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-900 mb-2">No saved jobs</h3>
+                    <p className="text-gray-600 mb-4">Save jobs you're interested in to view them here</p>
+                    <Link href="/jobs">
+                      <Button>
+                        <Search className="mr-2 h-4 w-4" />
+                        Browse Jobs
+                      </Button>
+                    </Link>
+                  </div>
+                ) : (
+                  savedJobs.map((saved) => (
+                    <div key={saved.id} className="flex items-center justify-between p-3 border rounded-lg">
+                      <div className="flex items-center space-x-3">
+                        <Heart className="h-5 w-5 text-red-500" />
+                        <div>
+                          <h4 className="font-medium">{saved.job?.title || "Job Title"}</h4>
+                          <p className="text-sm text-gray-600">{saved.job?.company || "Company"}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Button size="sm" variant="outline">
+                          Apply Now
+                        </Button>
+                        <Button size="sm" variant="ghost">
+                          Remove
+                        </Button>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      {getStatusIcon(doc.status)}
-                      <span className="text-sm">{doc.status}</span>
-                    </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
-              <CardDescription>Upload new documents or manage existing ones</CardDescription>
+              <CardTitle>Recent Job Opportunities</CardTitle>
+              <CardDescription>Latest job postings that might interest you</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              <Dialog open={isUploadDialogOpen} onOpenChange={setUploadDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="w-full justify-start bg-transparent" variant="outline">
-                    <Upload className="mr-2 h-4 w-4" />
-                    Upload New Document
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Upload Document</DialogTitle>
-                  </DialogHeader>
-                  <DocumentUploadForm onSuccess={() => setUploadDialogOpen(false)} />
-                </DialogContent>
-              </Dialog>
-              <Button className="w-full justify-start bg-transparent" variant="outline">
-                <FileText className="mr-2 h-4 w-4" />
-                Generate Visa Application
-              </Button>
-              <Button className="w-full justify-start bg-transparent" variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Download Document Package
-              </Button>
-              <Button className="w-full justify-start bg-transparent" variant="outline">
-                <Eye className="mr-2 h-4 w-4" />
-                Preview Documents
-              </Button>
+              {recentJobs.map((job) => (
+                <div key={job.id} className="flex items-center justify-between p-3 border rounded-lg">
+                  <div>
+                    <h4 className="font-medium">{job.title}</h4>
+                    <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Button size="sm" variant="outline">
+                      <Heart className="h-4 w-4" />
+                    </Button>
+                    <Button size="sm">
+                      Apply
+                    </Button>
+                  </div>
+                </div>
+              ))}
+              <Link href="/jobs">
+                <Button className="w-full" variant="outline">
+                  View All Jobs
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         </div>
+      </TabsContent>
+
+      {/* Messages Tab */}
+      <TabsContent value="messages">
+        <Card>
+          <CardHeader>
+            <CardTitle>Messages</CardTitle>
+            <CardDescription>Communicate with employers and applicants</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-center py-8">
+              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">Messages</h3>
+              <p className="text-gray-600 mb-4">View and manage your conversations with employers and applicants</p>
+              <Link href="/messages">
+                <Button>
+                  <MessageSquare className="mr-2 h-4 w-4" />
+                  View Messages
+                </Button>
+              </Link>
+            </div>
+          </CardContent>
+        </Card>
       </TabsContent>
 
       {/* Profile Tab */}
@@ -263,9 +337,11 @@ export function DashboardClient({ applications, documents, profileCompletion }: 
               <CardDescription>Comprehensive guides for each European country</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full bg-transparent">
-                Browse Guides
-              </Button>
+              <Link href="/research">
+                <Button variant="outline" className="w-full bg-transparent">
+                  Browse Guides
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
@@ -276,9 +352,11 @@ export function DashboardClient({ applications, documents, profileCompletion }: 
               <CardDescription>Connect with immigration lawyers and consultants</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button variant="outline" className="w-full bg-transparent">
-                Find Legal Help
-              </Button>
+              <Link href="/legal-support">
+                <Button variant="outline" className="w-full bg-transparent">
+                  Find Legal Help
+                </Button>
+              </Link>
             </CardContent>
           </Card>
 
