@@ -30,7 +30,11 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
+<<<<<<< HEAD
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false}>
+=======
+        <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light">
+>>>>>>> d617ea28f66047611f222d4169d33e7c51d38692
           <Header user={user} />
           {children}
           <Chatbot />
