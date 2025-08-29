@@ -52,7 +52,7 @@ export default async function MessagesPage() {
 
   const userRole = profile?.role || "job_seeker";
 
-  let conversations: Conversation[] = [];
+  let conversations: any[] = [];
 
   // Filter conversations based on user role
   if (userRole === "employer") {

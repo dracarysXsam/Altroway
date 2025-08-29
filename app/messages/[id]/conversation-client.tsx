@@ -463,13 +463,20 @@ export function ConversationClient({ conversation, currentUserId }: Conversation
             </Link>
 
             {/* Participant Profile Link */}
-            <Link href={`/profile/${otherParticipant?.id}`}>
-              <Button variant="outline" size="sm" className="flex items-center gap-1">
+            {otherParticipant?.id && otherParticipant.id !== 'undefined' ? (
+              <Link href={`/profile/${otherParticipant.id}`}>
+                <Button variant="outline" size="sm" className="flex items-center gap-1">
+                  <Eye className="h-4 w-4" />
+                  View {currentUserRole === 'applicant' ? 'Employer' : 'Applicant'} Profile
+                  <ExternalLink className="h-3 w-3" />
+                </Button>
+              </Link>
+            ) : (
+              <Button variant="outline" size="sm" disabled className="flex items-center gap-1">
                 <Eye className="h-4 w-4" />
-                View {currentUserRole === 'applicant' ? 'Employer' : 'Applicant'} Profile
-                <ExternalLink className="h-3 w-3" />
+                Profile Unavailable
               </Button>
-            </Link>
+            )}
 
             {/* Current User's Own Profile */}
             <Link href="/profile">
