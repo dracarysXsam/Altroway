@@ -19,7 +19,7 @@ const UploadSchema = z.object({
 });
 
 export async function uploadDocument(prevState: any, formData: FormData) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const {
     data: { user },

@@ -1,9 +1,11 @@
 import { Button } from "@/components/ui/button"
-import { MapPin } from "lucide-react"
+import { MapPin, MessageSquare, Bookmark, Building, Scale, Users, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { MobileNav } from "./mobile-nav"
 import { UserMenu } from "./user-menu"
+import { MessageNotification } from "./message-notification"
 import { logout } from "@/app/actions/auth-actions"
+import { RoleBasedContent } from "./role-guard"
 import type { User } from "@supabase/supabase-js"
 
 export function Header({ user }: { user: User | null }) {
@@ -23,14 +25,51 @@ export function Header({ user }: { user: User | null }) {
             <Link href="/jobs" className="text-gray-600 hover:text-blue-600 transition-colors">
               Jobs
             </Link>
-            <Link href="/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">
-              Dashboard
+            {user && (
+              <Link href="/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">
+                Profile
+              </Link>
+            )}
+            {user && (
+              <Link href="/messages" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1 relative">
+                <MessageSquare className="h-4 w-4" />
+                Messages
+                <MessageNotification />
+              </Link>
+            )}
+            {user && (
+              <Link href="/saved-jobs" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+                <Bookmark className="h-4 w-4" />
+                Saved Jobs
+              </Link>
+            )}
+            <RoleBasedContent
+              employer={
+                <Link href="/employer" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+                  <Building className="h-4 w-4" />
+                  Employer Portal
+                </Link>
+              }
+              legalAdvisor={
+                <Link href="/legal-support" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+                  <Scale className="h-4 w-4" />
+                  Legal Support
+                </Link>
+              }
+              superAdmin={
+                <Link href="/admin" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+                  <Building className="h-4 w-4" />
+                  Admin Portal
+                </Link>
+              }
+            />
+            <Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              About
             </Link>
-            <Link href="/legal-support" className="text-gray-600 hover:text-blue-600 transition-colors">
-              Legal Support
-            </Link>
-            <Link href="/research" className="text-gray-600 hover:text-blue-600 transition-colors">
-              Research
+            <Link href="/documentation" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+              <BookOpen className="h-4 w-4" />
+              Docs
             </Link>
           </nav>
           {/* Auth Buttons */}

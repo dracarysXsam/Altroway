@@ -1,0 +1,41 @@
+import { createClient } from '@/lib/supabase/server';
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function GET(request: NextRequest) {
+  try {
+    const supabase = createClient();
+    
+    // Check if user is authenticated
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    // Check if user is super admin
+    const { data: profile, error: profileError } = await supabase
+      .from('profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (profileError || profile?.role !== 'super_admin') {
+      return NextResponse.json({ error: 'Forbidden: Super admin access required' }, { status: 403 });
+    }
+
+    // Fetch all site settings
+    const { data: settings, error } = await supabase
+      .from('site_settings')
+      .select('*')
+      .order('setting_key', { ascending: true });
+
+    if (error) {
+      console.error('Error fetching settings:', error);
+      return NextResponse.json({ error: 'Failed to fetch settings' }, { status: 500 });
+    }
+
+    return NextResponse.json(settings);
+  } catch (error) {
+    console.error('Error in settings API:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
