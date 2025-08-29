@@ -10,7 +10,9 @@ import {
   Building, 
   Bookmark,
   ArrowLeft,
-  Calendar
+  Calendar,
+  Target,
+  TrendingUp
 } from "lucide-react";
 import Link from "next/link";
 import { SavedJobsClient } from "./saved-jobs-client";
@@ -76,6 +78,28 @@ export default async function SavedJobsPage() {
               </p>
             </div>
           </div>
+
+          {/* Stats */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-2xl mx-auto mt-8">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {jobsList.length}
+              </div>
+              <div className="text-gray-600 font-medium">Saved Jobs</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600 mb-2">
+                {jobsList.filter(job => new Date(job.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)).length}
+              </div>
+              <div className="text-gray-600 font-medium">New This Week</div>
+            </div>
+            <div className="text-center">
+              <div className="text-3xl font-bold text-purple-600 mb-2">
+                {jobsList.filter(job => job.salary_min && job.salary_min > 50000).length}
+              </div>
+              <div className="text-gray-600 font-medium">High-Paying</div>
+            </div>
+          </div>
         </div>
 
         {jobsList.length === 0 ? (
@@ -86,9 +110,20 @@ export default async function SavedJobsPage() {
               <p className="text-gray-600 mb-4">
                 Start browsing jobs and save the ones you're interested in for later.
               </p>
-              <Button asChild>
-                <Link href="/jobs">Browse Jobs</Link>
-              </Button>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" asChild className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-3 transition-all shadow-lg">
+                  <Link href="/jobs">
+                    <Target className="h-5 w-5 mr-2" />
+                    Browse Jobs
+                  </Link>
+                </Button>
+                <Button size="lg" asChild variant="outline" className="border-blue-200 text-blue-700 hover:bg-blue-50 hover:border-blue-300 px-8 py-3 transition-all">
+                  <Link href="/dashboard">
+                    <TrendingUp className="h-5 w-5 mr-2" />
+                    View Dashboard
+                  </Link>
+                </Button>
+              </div>
             </CardContent>
           </Card>
         ) : (

@@ -150,13 +150,13 @@ export function ConversationClient({ conversation, currentUserId }: Conversation
           ...msg,
           sender: {
             id: msg.sender_id,
-            full_name: msg.profiles?.full_name || msg.profiles?.email?.split('@')[0] || 'Unknown User',
-            email: msg.profiles?.email || '',
-            role: msg.profiles?.role || 'user',
-            avatar_url: msg.profiles?.avatar_url,
-            bio: msg.profiles?.bio,
-            location: msg.profiles?.location,
-            phone: msg.profiles?.phone
+            full_name: msg.profiles?.[0]?.full_name || msg.profiles?.[0]?.email?.split('@')[0] || 'Unknown User',
+            email: msg.profiles?.[0]?.email || '',
+            role: msg.profiles?.[0]?.role || 'user',
+            avatar_url: msg.profiles?.[0]?.avatar_url,
+            bio: msg.profiles?.[0]?.bio,
+            location: msg.profiles?.[0]?.location,
+            phone: msg.profiles?.[0]?.phone
           }
         }));
 

@@ -6,6 +6,14 @@ import { Button } from "@/components/ui/button";
 import { MessageSquare, Clock, User, Eye, Briefcase, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
+interface Message {
+  id: string;
+  content: string;
+  sender_id: string;
+  created_at: string;
+  read: boolean;
+}
+
 interface Conversation {
   id: string;
   created_at: string;
@@ -21,15 +29,9 @@ interface Conversation {
       title: string;
       company: string;
       employer_id: string;
-    };
-  };
-  messages: Array<{
-    id: string;
-    content: string;
-    sender_id: string;
-    created_at: string;
-    read: boolean;
-  }>;
+    }[];
+  }[];
+  messages: Message[];
 }
 
 export default async function MessagesPage() {
