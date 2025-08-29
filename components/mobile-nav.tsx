@@ -37,10 +37,6 @@ export function MobileNav({ user, handleSignOut }: MobileNavProps) {
               <Users className="h-4 w-4" />
               <span>Jobs</span>
             </Link>
-            <Link href="/guides" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600" onClick={closeMenu}>
-              <BookOpen className="h-4 w-4" />
-              <span>Guides</span>
-            </Link>
             <Link href="/legal-support" className="flex items-center space-x-2 text-gray-600 hover:text-blue-600" onClick={closeMenu}>
               <Users className="h-4 w-4" />
               <span>Legal Support</span>

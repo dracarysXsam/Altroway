@@ -1,379 +1,312 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  FileText,
-  CheckCircle,
-  Clock,
-  AlertCircle,
-  Upload,
-  Eye,
-  Download,
-  MapPin,
-  Building,
-  Calendar,
-  Users,
-  BookOpen,
-  Briefcase,
-  Search,
-  Heart,
-  MessageSquare,
-} from "lucide-react";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { DocumentUploadForm } from "./document-upload-form";
+import { 
+  Briefcase, 
+  FileText, 
+  MessageSquare, 
+  User, 
+  Building2,
+  Shield,
+  Settings,
+  Activity
+} from 'lucide-react';
+import { EmployerDashboard } from './employer-dashboard';
+import { SuperAdminDashboard } from './super-admin-dashboard';
 
-// Define types for the data props
-type JobApplication = {
-  id: string;
-  job_id: string;
-  applicant_id: string;
-  cover_letter: string;
-  resume_path: string;
-  status: string;
-  applied_at: string;
-  job?: {
-    title: string;
-    company: string;
-    location: string;
-  };
-};
-
-type SavedJob = {
+interface Profile {
   id: string;
   user_id: string;
-  job_id: string;
-  saved_at: string;
-  job?: {
-    title: string;
-    company: string;
-    location: string;
-  };
-};
+  full_name: string;
+  email: string;
+  role: string;
+  headline?: string;
+  skills?: string;
+  avatar_url?: string;
+  portfolio_url?: string;
+  is_active: boolean;
+}
 
-type RecentJob = {
+interface Job {
   id: string;
   title: string;
   company: string;
   location: string;
-};
+  status: string;
+  is_verified: boolean;
+  created_at: string;
+}
 
-type DashboardClientProps = {
-  jobApplications: JobApplication[];
-  savedJobs: SavedJob[];
-  recentJobs: RecentJob[];
-  profileCompletion: number;
-};
+interface Application {
+  id: string;
+  job_id: string;
+  applicant_id: string;
+  status: string;
+  applied_at: string;
+  job: Job;
+}
 
-const getStatusIcon = (status: string) => {
-  switch (status) {
-    case "accepted":
-      return <CheckCircle className="h-4 w-4 text-green-500" />;
-    case "pending":
-      return <Clock className="h-4 w-4 text-yellow-500" />;
-    case "rejected":
-      return <AlertCircle className="h-4 w-4 text-red-500" />;
-    default:
-      return <Clock className="h-4 w-4 text-gray-500" />;
+interface Conversation {
+  id: string;
+  job_application_id: string;
+  created_at: string;
+  job_application: {
+    job: Job;
+    applicant: Profile;
+  };
+}
+
+interface DashboardData {
+  profile: Profile;
+  jobs: Job[];
+  applications: Application[];
+  conversations: Conversation[];
+}
+
+export function DashboardClient({ data }: { data: DashboardData }) {
+  const [activeTab, setActiveTab] = useState('overview');
+
+  if (!data || !data.profile) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="text-lg">Loading dashboard...</div>
+      </div>
+    );
   }
-};
 
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "accepted":
-      return "bg-green-500";
-    case "pending":
-      return "bg-yellow-500";
-    case "rejected":
-      return "bg-red-500";
-    default:
-      return "bg-gray-500";
+  // If user is super admin, show super admin dashboard
+  if (data.profile.role === 'super_admin') {
+    return <SuperAdminDashboard />;
   }
-};
 
-export function DashboardClient({ jobApplications, savedJobs, recentJobs, profileCompletion }: DashboardClientProps) {
-  const [isUploadDialogOpen, setUploadDialogOpen] = useState(false);
+  // If user is employer, show employer dashboard
+  if (data.profile.role === 'employer') {
+    return <EmployerDashboard />;
+  }
 
+  // Default job seeker dashboard
   return (
-    <Tabs defaultValue="applications" className="space-y-6">
-      <TabsList className="grid w-full grid-cols-5">
-        <TabsTrigger value="applications">Applications</TabsTrigger>
-        <TabsTrigger value="saved">Saved Jobs</TabsTrigger>
-        <TabsTrigger value="messages">Messages</TabsTrigger>
-        <TabsTrigger value="profile">Profile</TabsTrigger>
-        <TabsTrigger value="resources">Resources</TabsTrigger>
-      </TabsList>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Welcome back, {data.profile.full_name}!</h1>
+          <p className="text-muted-foreground">Manage your job search and applications</p>
+        </div>
+        <Badge variant="secondary" className="text-sm">
+          {data.profile.role === 'job_seeker' ? 'Job Seeker' : 'Legal Provider'}
+        </Badge>
+      </div>
 
-      {/* Applications Tab */}
-      <TabsContent value="applications">
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Job Applications</CardTitle>
-            <CardDescription>Track the status of your job applications across Europe</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {jobApplications.length === 0 ? (
-                <div className="text-center py-8">
-                  <Briefcase className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No applications yet</h3>
-                  <p className="text-gray-600 mb-4">Start applying to jobs to track your progress here</p>
-                  <Link href="/jobs">
-                    <Button>
-                      <Search className="mr-2 h-4 w-4" />
-                      Browse Jobs
-                    </Button>
-                  </Link>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+        <TabsList className="grid w-full grid-cols-4">
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="applications">Applications</TabsTrigger>
+          <TabsTrigger value="messages">Messages</TabsTrigger>
+          <TabsTrigger value="profile">Profile</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-4">
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Total Applications</CardTitle>
+                <FileText className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{data.applications.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  {data.applications.filter(a => a.status === 'pending').length} pending
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Active Conversations</CardTitle>
+                <MessageSquare className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold">{data.conversations.length}</div>
+                <p className="text-xs text-muted-foreground">
+                  Ongoing discussions
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Profile Status</CardTitle>
+                <User className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">Complete</div>
+                <p className="text-xs text-muted-foreground">
+                  Profile is up to date
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <CardTitle className="text-sm font-medium">Account Status</CardTitle>
+                <Activity className="h-4 w-4 text-muted-foreground" />
+              </CardHeader>
+              <CardContent>
+                <div className="text-2xl font-bold text-green-600">Active</div>
+                <p className="text-xs text-muted-foreground">
+                  Account is active
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className="grid gap-4 md:grid-cols-2">
+            <Card>
+              <CardHeader>
+                <CardTitle>Recent Applications</CardTitle>
+                <CardDescription>Your latest job applications</CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-2">
+                  {data.applications.slice(0, 3).map((application) => (
+                    <div key={application.id} className="flex items-center justify-between text-sm">
+                      <span className="font-medium">{application.job?.title || 'Job Title Not Available'}</span>
+                      <Badge variant="secondary">{application.status}</Badge>
+                    </div>
+                  ))}
                 </div>
-              ) : (
-                jobApplications.map((app) => (
-                  <div key={app.id} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-3 h-3 rounded-full ${getStatusColor(app.status)}`}></div>
-                      <div>
-                        <h3 className="font-semibold">{app.job?.title || "Job Title"}</h3>
-                        <div className="flex items-center space-x-4 text-sm text-gray-600">
-                          <div className="flex items-center space-x-1">
-                            <Building className="h-4 w-4" />
-                            <span>{app.job?.company || "Company"}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <MapPin className="h-4 w-4" />
-                            <span>{app.job?.location || "Location"}</span>
-                          </div>
-                          <div className="flex items-center space-x-1">
-                            <Calendar className="h-4 w-4" />
-                            <span>Applied {new Date(app.applied_at).toLocaleDateString()}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge variant="secondary" className="capitalize">{app.status}</Badge>
-                      <Button size="sm" variant="outline">
-                        View Details
-                      </Button>
-                    </div>
-                  </div>
-                ))
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
+              </CardContent>
+            </Card>
 
-      {/* Saved Jobs Tab */}
-      <TabsContent value="saved">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <Card>
+              <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Common tasks and shortcuts</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-2">
+                <Button variant="outline" className="w-full justify-start">
+                  <FileText className="w-4 h-4 mr-2" />
+                  Browse Jobs
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <User className="w-4 h-4 mr-2" />
+                  Update Profile
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  View Messages
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="applications" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Saved Jobs</CardTitle>
-              <CardDescription>Jobs you've saved for later</CardDescription>
+              <CardTitle>Job Applications</CardTitle>
+              <CardDescription>Track your job application progress</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {savedJobs.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Heart className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-gray-900 mb-2">No saved jobs</h3>
-                    <p className="text-gray-600 mb-4">Save jobs you're interested in to view them here</p>
-                    <Link href="/jobs">
-                      <Button>
-                        <Search className="mr-2 h-4 w-4" />
-                        Browse Jobs
-                      </Button>
-                    </Link>
-                  </div>
-                ) : (
-                  savedJobs.map((saved) => (
-                    <div key={saved.id} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div className="flex items-center space-x-3">
-                        <Heart className="h-5 w-5 text-red-500" />
-                        <div>
-                          <h4 className="font-medium">{saved.job?.title || "Job Title"}</h4>
-                          <p className="text-sm text-gray-600">{saved.job?.company || "Company"}</p>
+                {data.applications.map((application) => (
+                  <div key={application.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div>
+                        <div className="font-medium">{application.job?.title || 'Job Title Not Available'}</div>
+                        <div className="text-sm text-muted-foreground">{application.job?.company || 'Company'} • {application.job?.location || 'Location'}</div>
+                        <div className="text-xs text-muted-foreground">
+                          Applied: {new Date(application.applied_at).toLocaleDateString()}
                         </div>
                       </div>
-                      <div className="flex items-center space-x-2">
-                        <Button size="sm" variant="outline">
-                          Apply Now
-                        </Button>
-                        <Button size="sm" variant="ghost">
-                          Remove
-                        </Button>
-                      </div>
                     </div>
-                  ))
+                    <Badge variant={application.status === 'pending' ? 'secondary' : 'default'}>
+                      {application.status}
+                    </Badge>
+                  </div>
+                ))}
+                {data.applications.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No applications yet. Start applying to jobs!
+                  </div>
                 )}
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
 
+        <TabsContent value="messages" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Job Opportunities</CardTitle>
-              <CardDescription>Latest job postings that might interest you</CardDescription>
+              <CardTitle>Messages</CardTitle>
+              <CardDescription>Communicate with employers about your applications</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              {recentJobs.map((job) => (
-                <div key={job.id} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div>
-                    <h4 className="font-medium">{job.title}</h4>
-                    <p className="text-sm text-gray-600">{job.company} • {job.location}</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
+            <CardContent>
+              <div className="space-y-4">
+                {data.conversations.map((conversation) => (
+                  <div key={conversation.id} className="flex items-center justify-between p-4 border rounded-lg">
+                    <div className="flex items-center space-x-4">
+                      <div>
+                        <div className="font-medium">{conversation.job_application?.job?.title || 'Job Title Not Available'}</div>
+                        <div className="text-sm text-muted-foreground">
+                          {conversation.job_application?.job?.company || 'Company'} • {conversation.job_application?.job?.location || 'Location'}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Started: {new Date(conversation.created_at).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
                     <Button size="sm" variant="outline">
-                      <Heart className="h-4 w-4" />
-                    </Button>
-                    <Button size="sm">
-                      Apply
+                      View Messages
                     </Button>
                   </div>
-                </div>
-              ))}
-              <Link href="/jobs">
-                <Button className="w-full" variant="outline">
-                  View All Jobs
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-        </div>
-      </TabsContent>
-
-      {/* Messages Tab */}
-      <TabsContent value="messages">
-        <Card>
-          <CardHeader>
-            <CardTitle>Messages</CardTitle>
-            <CardDescription>Communicate with employers and applicants</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="text-center py-8">
-              <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">Messages</h3>
-              <p className="text-gray-600 mb-4">View and manage your conversations with employers and applicants</p>
-              <Link href="/messages">
-                <Button>
-                  <MessageSquare className="mr-2 h-4 w-4" />
-                  View Messages
-                </Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* Profile Tab */}
-      <TabsContent value="profile">
-        <Card>
-          <CardHeader>
-            <CardTitle>Profile Completion</CardTitle>
-            <CardDescription>Complete your profile to improve your job matching</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-6">
-              <div>
-                <div className="flex justify-between items-center mb-2">
-                  <span className="text-sm font-medium">Overall Progress</span>
-                  <span className="text-sm text-gray-600">{profileCompletion}%</span>
-                </div>
-                <Progress value={profileCompletion} className="mb-4" />
+                ))}
+                {data.conversations.length === 0 && (
+                  <div className="text-center py-8 text-muted-foreground">
+                    No conversations yet. Messages will appear here when employers respond to your applications.
+                  </div>
+                )}
               </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Personal Information</span>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+        <TabsContent value="profile" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Profile Information</CardTitle>
+              <CardDescription>Your professional profile and settings</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div>
+                    <label className="text-sm font-medium">Full Name</label>
+                    <div className="text-sm text-muted-foreground">{data.profile.full_name}</div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Work Experience</span>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  <div>
+                    <label className="text-sm font-medium">Email</label>
+                    <div className="text-sm text-muted-foreground">{data.profile.email}</div>
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Education</span>
-                    <CheckCircle className="h-4 w-4 text-green-500" />
+                  <div>
+                    <label className="text-sm font-medium">Headline</label>
+                    <div className="text-sm text-muted-foreground">{data.profile.headline || 'Not set'}</div>
                   </div>
-                </div>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Skills & Languages</span>
-                    <Clock className="h-4 w-4 text-yellow-500" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Preferences</span>
-                    <AlertCircle className="h-4 w-4 text-red-500" />
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Portfolio</span>
-                    <AlertCircle className="h-4 w-4 text-red-500" />
+                  <div>
+                    <label className="text-sm font-medium">Skills</label>
+                    <div className="text-sm text-muted-foreground">{data.profile.skills || 'Not set'}</div>
                   </div>
                 </div>
+                <Button variant="outline">Edit Profile</Button>
               </div>
-
-              <Link href="/profile/edit">
-                <Button className="w-full">Complete Profile</Button>
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
-      </TabsContent>
-
-      {/* Resources Tab */}
-      <TabsContent value="resources">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader>
-              <BookOpen className="h-8 w-8 text-blue-600 mb-2" />
-              <CardTitle>Country Guides</CardTitle>
-              <CardDescription>Comprehensive guides for each European country</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/research">
-                <Button variant="outline" className="w-full bg-transparent">
-                  Browse Guides
-                </Button>
-              </Link>
             </CardContent>
           </Card>
-
-          <Card>
-            <CardHeader>
-              <Users className="h-8 w-8 text-green-600 mb-2" />
-              <CardTitle>Legal Support</CardTitle>
-              <CardDescription>Connect with immigration lawyers and consultants</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Link href="/legal-support">
-                <Button variant="outline" className="w-full bg-transparent">
-                  Find Legal Help
-                </Button>
-              </Link>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <FileText className="h-8 w-8 text-purple-600 mb-2" />
-              <CardTitle>Document Templates</CardTitle>
-              <CardDescription>Download templates for visa and work permit applications</CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button variant="outline" className="w-full bg-transparent">
-                Download Templates
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
-      </TabsContent>
-    </Tabs>
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }

@@ -222,7 +222,7 @@ export async function deleteJob(jobId: string) {
   }
 }
 
-export async function applyToJob(jobId: string, coverLetter: string, resumeFile?: File) {
+export async function applyToJob(prevState: any, formData: FormData) {
   try {
     const supabase = await createClient();
 
@@ -234,21 +234,42 @@ export async function applyToJob(jobId: string, coverLetter: string, resumeFile?
       return { message: "Authentication required.", status: "error" };
     }
 
+    // Extract form data
+    const jobId = formData.get("jobId") as string;
+    const coverLetter = formData.get("coverLetter") as string;
+    const resumeFile = formData.get("resumeFile") as File;
+
+    if (!jobId) {
+      return { message: "Job ID is required", status: "error" };
+    }
+
     let resumePath = null;
 
     // Upload resume if provided
-    if (resumeFile) {
-      const filePath = `${user.id}/resumes/${Date.now()}-${resumeFile.name}`;
-      const { error: uploadError } = await supabase.storage
-        .from("documents")
-        .upload(filePath, resumeFile);
+    if (resumeFile && resumeFile.size > 0) {
+      try {
+        const filePath = `${user.id}/resumes/${Date.now()}-${resumeFile.name}`;
+        const { error: uploadError } = await supabase.storage
+          .from("documents")
+          .upload(filePath, resumeFile);
 
-      if (uploadError) {
-        console.error("Upload Error:", uploadError);
-        return { message: `Failed to upload resume: ${uploadError.message}`, status: "error" };
+        if (uploadError) {
+          console.error("Upload Error:", uploadError);
+          // If storage bucket doesn't exist, continue without file upload
+          if (uploadError.message.includes("Bucket not found")) {
+            console.warn("Storage bucket not found, continuing without file upload");
+            resumePath = null;
+          } else {
+            return { message: `Failed to upload resume: ${uploadError.message}`, status: "error" };
+          }
+        } else {
+          resumePath = filePath;
+        }
+      } catch (error) {
+        console.error("Storage error:", error);
+        // Continue without file upload if storage fails
+        resumePath = null;
       }
-
-      resumePath = filePath;
     }
 
     // Create job application
@@ -303,6 +324,18 @@ export async function saveJob(jobId: string) {
       return { message: "Authentication required.", status: "error" };
     }
 
+    // First check if the job is already saved
+    const { data: existingSave } = await supabase
+      .from("saved_jobs")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("job_id", jobId)
+      .single();
+
+    if (existingSave) {
+      return { message: "Job is already saved!", status: "success" };
+    }
+
     const { error } = await supabase
       .from("saved_jobs")
       .insert({
@@ -353,5 +386,67 @@ export async function unsaveJob(jobId: string) {
   } catch (error) {
     console.error("unsaveJob error:", error);
     return { message: "Failed to unsave job", status: "error" };
+  }
+}
+
+export async function getSavedJobs() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return { error: "Not authenticated" };
+  }
+  const { data, error } = await supabase
+    .from("saved_jobs")
+    .select(`
+      *,
+      jobs (
+        id,
+        title,
+        company,
+        location,
+        salary_min,
+        salary_max,
+        job_type,
+        experience_level,
+        created_at
+      )
+    `)
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) {
+    console.error("Error fetching saved jobs:", error);
+    return { error: "Failed to fetch saved jobs" };
+  }
+  return { data };
+}
+
+export async function checkIfJobSaved(jobId: string) {
+  try {
+    const supabase = await createClient();
+
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { isSaved: false };
+    }
+
+    const { data: savedJob, error } = await supabase
+      .from("saved_jobs")
+      .select("id")
+      .eq("user_id", user.id)
+      .eq("job_id", jobId)
+      .single();
+
+    if (error && error.code !== 'PGRST116') { // PGRST116 is "not found"
+      console.error("Error checking if job is saved:", error);
+      return { isSaved: false };
+    }
+
+    return { isSaved: !!savedJob };
+  } catch (error) {
+    console.error("checkIfJobSaved error:", error);
+    return { isSaved: false };
   }
 }

@@ -1,207 +1,150 @@
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { ArrowRight, MapPin, FileText, Users, Shield, Search, Clock } from "lucide-react"
-import Link from "next/link"
-import { Footer } from "@/components/footer"
+import { createClient } from "@/lib/supabase/server";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Search, Users, Globe, Scale, MessageSquare, Bookmark, Shield, Star } from "lucide-react";
+import Link from "next/link";
+import { Footer } from "@/components/footer";
 
-export default function HomePage() {
+export default async function HomePage() {
+  const supabase = await createClient();
+
+  // Fetch dynamic stats
+  const { count: jobCount } = await supabase
+    .from("jobs")
+    .select("*", { count: "exact", head: true })
+    .eq("status", "active");
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Hero Section */}
-      <section className="container mx-auto px-4 py-16 lg:py-24">
-        <div className="text-center max-w-4xl mx-auto">
-          <Badge variant="secondary" className="mb-4">
-            🇪🇺 Your Gateway to Europe
-          </Badge>
-          <h1 className="text-4xl lg:text-6xl font-bold text-gray-900 mb-6">
-            Find Your Dream Job in <span className="text-blue-600">Europe</span>
-          </h1>
-          <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-            Simplify your journey to working in Europe. From job search to visa applications, we handle the complexity
-            so you can focus on your career.
-          </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8" asChild>
-              <Link href="/jobs">
-                Browse Jobs <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8 bg-transparent" asChild>
-              <Link href="/dashboard">Get Started</Link>
-            </Button>
-          </div>
-        </div>
-      </section>
-
-      {/* Stats Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          <div className="text-center">
-                      <div className="text-3xl font-bold text-blue-600 mb-2">
-            <span id="job-count">Loading...</span>
-          </div>
-          <div className="text-gray-600">Active Job Listings</div>
-        </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">27</div>
-          <div className="text-gray-600">European Countries</div>
-        </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">
-            <span id="relocation-count">Loading...</span>
-          </div>
-          <div className="text-gray-600">Successful Relocations</div>
-        </div>
-        <div className="text-center">
-          <div className="text-3xl font-bold text-blue-600 mb-2">
-            <span id="partner-count">Loading...</span>
-          </div>
-          <div className="text-gray-600">Legal Partners</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">Everything You Need in One Platform</h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            From job search to legal documentation, we've streamlined the entire process
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <Search className="h-12 w-12 text-blue-600 mb-4" />
-              <CardTitle>Smart Job Search</CardTitle>
-              <CardDescription>
-                Advanced filtering by industry, salary, location, and visa sponsorship availability
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <FileText className="h-12 w-12 text-green-600 mb-4" />
-              <CardTitle>Document Management</CardTitle>
-              <CardDescription>
-                Secure upload and auto-fill for visa applications, work permits, and personal documents
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <Shield className="h-12 w-12 text-purple-600 mb-4" />
-              <CardTitle>Legal Support</CardTitle>
-              <CardDescription>
-                Connect with verified immigration lawyers and legal consultants across Europe
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <Clock className="h-12 w-12 text-orange-600 mb-4" />
-              <CardTitle>Real-time Tracking</CardTitle>
-              <CardDescription>Monitor your application status and document verification in real-time</CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <Users className="h-12 w-12 text-red-600 mb-4" />
-              <CardTitle>Employer Network</CardTitle>
-              <CardDescription>
-                Direct connections with European employers actively seeking international talent
-              </CardDescription>
-            </CardHeader>
-          </Card>
-
-          <Card className="border-0 shadow-lg hover:shadow-xl transition-shadow">
-            <CardHeader>
-              <MapPin className="h-12 w-12 text-indigo-600 mb-4" />
-              <CardTitle>Country Guides</CardTitle>
-              <CardDescription>
-                Comprehensive relocation guides for each European country with local insights
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        </div>
-      </section>
-
-      {/* How It Works */}
-      <section className="bg-gray-50 py-16">
-        <div className="container mx-auto px-4">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-4">How Altroway Works</h2>
-            <p className="text-xl text-gray-600">Your journey to Europe in 4 simple steps</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <div className="text-center">
-              <div className="bg-blue-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                1
+    <div className="flex flex-col min-h-screen">
+      <main className="flex-1">
+        {/* Hero Section */}
+        <section className="bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 text-white py-20">
+          <div className="container mx-auto px-4 text-center">
+            <div className="max-w-4xl mx-auto">
+              <Badge variant="secondary" className="mb-4 text-blue-600 bg-white/90">
+                <Globe className="h-4 w-4 mr-2" />
+                Your Gateway to Europe
+              </Badge>
+              <h1 className="text-4xl md:text-6xl font-bold mb-6">
+                Find Your Dream Job in
+                <span className="block text-white">Europe</span>
+              </h1>
+              <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+                Connect with top European employers and build your career across the continent.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                <Button size="lg" asChild className="text-lg px-8 py-6 bg-white text-blue-900">
+                  <Link href="/jobs">
+                    <Search className="h-5 w-5 mr-2" />
+                    Browse Jobs
+                  </Link>
+                </Button>
+                <Button size="lg" asChild className="text-lg px-8 py-6 bg-white text-blue-900">
+                  <Link href="/register">
+                    <Users className="h-5 w-5 mr-2" />
+                    Join Now
+                  </Link>
+                </Button>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Create Profile</h3>
-              <p className="text-gray-600">Set up your profile with skills, experience, and preferences</p>
-            </div>
 
-            <div className="text-center">
-              <div className="bg-green-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                2
+              {/* Simple Stats */}
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-2xl mx-auto">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-white">{jobCount || 150}+</div>
+                  <div className="text-blue-100">Active Jobs</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-white">27</div>
+                  <div className="text-blue-100">Countries</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-white">500+</div>
+                  <div className="text-blue-100">Success Stories</div>
+                </div>
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-white">10+</div>
+                  <div className="text-blue-100">Legal Partners</div>
+                </div>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Find Jobs</h3>
-              <p className="text-gray-600">Browse thousands of jobs with visa sponsorship across Europe</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-purple-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                3
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Apply & Document</h3>
-              <p className="text-gray-600">Apply to jobs and manage all required documents in one place</p>
-            </div>
-
-            <div className="text-center">
-              <div className="bg-orange-600 text-white rounded-full w-16 h-16 flex items-center justify-center text-2xl font-bold mx-auto mb-4">
-                4
-              </div>
-              <h3 className="text-xl font-semibold mb-2">Relocate</h3>
-              <p className="text-gray-600">Get legal support and guidance for a smooth relocation process</p>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* CTA Section */}
-      <section className="container mx-auto px-4 py-16">
-        <Card className="bg-blue-600 text-white border-0 shadow-xl">
-          <CardContent className="p-12 text-center">
-            <h2 className="text-3xl lg:text-4xl font-bold mb-4">Ready to Start Your European Journey?</h2>
-            <p className="text-xl mb-8 opacity-90">
-              Join thousands of professionals who have successfully relocated to Europe
+        {/* Simple Features Section */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <div className="text-center mb-12">
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Why Choose Altroway?
+              </h2>
+              <p className="text-lg text-gray-600 max-w-2xl mx-auto">
+                Everything you need for your European career journey
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <Card className="text-center p-6">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Search className="h-8 w-8 text-blue-600" />
+                </div>
+                <CardTitle className="text-xl mb-2">Smart Job Matching</CardTitle>
+                <p className="text-gray-600">
+                  Find the perfect job opportunities based on your skills and experience.
+                </p>
+              </Card>
+
+              <Card className="text-center p-6">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <Scale className="h-8 w-8 text-green-600" />
+                </div>
+                <CardTitle className="text-xl mb-2">Legal Support</CardTitle>
+                <p className="text-gray-600">
+                  Get expert guidance for visas, work permits, and immigration processes.
+                </p>
+              </Card>
+
+              <Card className="text-center p-6">
+                <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <MessageSquare className="h-8 w-8 text-purple-600" />
+                </div>
+                <CardTitle className="text-xl mb-2">Direct Communication</CardTitle>
+                <p className="text-gray-600">
+                  Connect directly with employers and legal advisors.
+                </p>
+              </Card>
+            </div>
+          </div>
+        </section>
+
+        {/* Simple CTA Section */}
+        <section className="py-16 bg-blue-600 text-white">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-3xl font-bold mb-6">
+              Ready to Start Your European Journey?
+            </h2>
+            <p className="text-lg text-blue-100 mb-8 max-w-2xl mx-auto">
+              Join thousands of professionals who have already found their dream jobs in Europe.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button size="lg" variant="secondary" className="text-lg px-8" asChild>
-                <Link href="/dashboard">Create Free Account</Link>
+              <Button size="lg" asChild className="text-lg px-8 py-6 bg-white text-blue-900">
+                <Link href="/register">
+                  <Users className="h-5 w-5 mr-2" />
+                  Get Started Today
+                </Link>
               </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="text-lg px-8 border-white text-white hover:bg-white hover:text-blue-600 bg-transparent"
-                asChild
-              >
-                <Link href="/jobs">Browse Jobs</Link>
+              <Button size="lg" asChild className="text-lg px-8 py-6 bg-blue-700 text-white">
+                <Link href="/jobs">
+                  <Search className="h-5 w-5 mr-2" />
+                  Browse Jobs
+                </Link>
               </Button>
             </div>
-          </CardContent>
-        </Card>
-      </section>
-
+          </div>
+        </section>
+      </main>
       <Footer />
     </div>
-  )
+  );
 }

@@ -30,15 +30,12 @@ export default async function ConversationPage({
         id,
         status,
         applied_at,
+        applicant_id,
         jobs (
           id,
           title,
           company,
           employer_id
-        ),
-        profiles!job_applications_applicant_id_fkey (
-          full_name,
-          avatar_url
         )
       ),
       messages (
@@ -46,11 +43,7 @@ export default async function ConversationPage({
         content,
         sender_id,
         created_at,
-        read,
-        profiles!messages_sender_id_fkey (
-          full_name,
-          avatar_url
-        )
+        read
       )
     `)
     .eq("id", id)
@@ -60,5 +53,42 @@ export default async function ConversationPage({
     redirect("/messages");
   }
 
-  return <ConversationClient conversation={conversation} currentUserId={user.id} />;
+  // Get user information for all participants
+  const allUserIds = new Set<string>();
+  if (conversation.job_applications?.applicant_id) {
+    allUserIds.add(conversation.job_applications.applicant_id);
+  }
+  if (conversation.job_applications?.jobs?.employer_id) {
+    allUserIds.add(conversation.job_applications.jobs.employer_id);
+  }
+  conversation.messages?.forEach(message => {
+    allUserIds.add(message.sender_id);
+  });
+
+  // Get user details
+  const { data: users } = await supabase.auth.admin.listUsers();
+  const userMap = new Map();
+  users?.users.forEach(u => {
+    userMap.set(u.id, {
+      email: u.email,
+      full_name: u.user_metadata?.full_name || u.email?.split('@')[0] || 'Unknown User',
+      role: u.user_metadata?.role || 'user'
+    });
+  });
+
+  // Add user information to messages
+  const messagesWithUsers = conversation.messages?.map(message => ({
+    ...message,
+    sender: userMap.get(message.sender_id)
+  })) || [];
+
+  // Add user information to conversation
+  const conversationWithUsers = {
+    ...conversation,
+    messages: messagesWithUsers,
+    applicant: userMap.get(conversation.job_applications?.applicant_id),
+    employer: userMap.get(conversation.job_applications?.jobs?.employer_id)
+  };
+
+  return <ConversationClient conversation={conversationWithUsers} currentUserId={user.id} />;
 }

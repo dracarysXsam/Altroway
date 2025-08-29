@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, MapPin, Clock, Euro, Building, Zap, Bookmark, Heart } from "lucide-react";
 import Link from "next/link";
+import { saveJob, unsaveJob, checkIfJobSaved } from "@/app/actions/job-actions";
 
 type Job = {
   id: string;
@@ -39,12 +40,70 @@ export function JobsClient({ initialJobs }: JobsClientProps) {
   const [visaSponsorship, setVisaSponsorship] = useState(false);
   const [urgentOnly, setUrgentOnly] = useState(false);
   const [savedJobs, setSavedJobs] = useState<string[]>([]);
+  const [loadingJobs, setLoadingJobs] = useState<Set<string>>(new Set());
 
-  const handleBookmark = (jobId: string) => {
-    if (savedJobs.includes(jobId)) {
-      setSavedJobs(savedJobs.filter((id) => id !== jobId));
-    } else {
-      setSavedJobs([...savedJobs, jobId]);
+  // Check which jobs are saved on component mount
+  useEffect(() => {
+    const checkSavedJobs = async () => {
+      const savedJobIds: string[] = [];
+      for (const job of initialJobs) {
+        const { isSaved } = await checkIfJobSaved(job.id);
+        if (isSaved) {
+          savedJobIds.push(job.id);
+        }
+      }
+      setSavedJobs(savedJobIds);
+    };
+
+    checkSavedJobs();
+  }, [initialJobs]);
+
+  // Persist saved jobs state in localStorage
+  useEffect(() => {
+    const savedJobsFromStorage = localStorage.getItem('savedJobs');
+    if (savedJobsFromStorage) {
+      try {
+        const parsed = JSON.parse(savedJobsFromStorage);
+        setSavedJobs(parsed);
+      } catch (error) {
+        console.error('Error parsing saved jobs from storage:', error);
+      }
+    }
+  }, []);
+
+  // Save to localStorage whenever savedJobs changes
+  useEffect(() => {
+    localStorage.setItem('savedJobs', JSON.stringify(savedJobs));
+  }, [savedJobs]);
+
+  const handleBookmark = async (jobId: string) => {
+    setLoadingJobs(prev => new Set(prev).add(jobId));
+    
+    try {
+      if (savedJobs.includes(jobId)) {
+        const result = await unsaveJob(jobId);
+        if (result.status === "success") {
+          setSavedJobs(prev => prev.filter(id => id !== jobId));
+        } else {
+          alert(result.message || "Failed to remove job from saved jobs");
+        }
+      } else {
+        const result = await saveJob(jobId);
+        if (result.status === "success") {
+          setSavedJobs(prev => [...prev, jobId]);
+        } else {
+          alert(result.message || "Failed to save job");
+        }
+      }
+    } catch (error) {
+      console.error("Error toggling job save:", error);
+      alert("Failed to update saved jobs");
+    } finally {
+      setLoadingJobs(prev => {
+        const newSet = new Set(prev);
+        newSet.delete(jobId);
+        return newSet;
+      });
     }
   };
 
@@ -275,15 +334,21 @@ export function JobsClient({ initialJobs }: JobsClientProps) {
                       </div>
                     </div>
                     <div className="flex flex-col gap-2 ml-4">
-                      <Link href={`/jobs/${job.id}/apply`}>
-                        <Button size="sm">Apply Now</Button>
+                      <Link href={`/jobs/${job.id}`}>
+                        <Button size="sm">View Details</Button>
                       </Link>
                       <Button 
                         size="sm" 
-                        variant={savedJobs.includes(job.id) ? "default" : "outline"} 
+                        variant="ghost" 
                         onClick={() => handleBookmark(job.id)}
+                        disabled={loadingJobs.has(job.id)}
+                        className={`${
+                          savedJobs.includes(job.id) 
+                            ? "text-blue-600 hover:text-blue-700" 
+                            : "text-gray-400 hover:text-blue-600"
+                        }`}
                       >
-                        <Heart className="h-4 w-4" />
+                        <Bookmark className={`h-4 w-4 ${savedJobs.includes(job.id) ? "fill-current" : ""}`} />
                       </Button>
                     </div>
                   </div>

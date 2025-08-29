@@ -22,6 +22,7 @@ export default async function JobsPage() {
 
   if (error) {
     console.error("Error fetching jobs:", error);
+    // Return empty array instead of failing
   }
 
   const jobsList = jobs || [];
