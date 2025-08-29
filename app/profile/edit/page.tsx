@@ -149,7 +149,7 @@ export default function EditProfilePage() {
         description: "Profile updated successfully!",
       });
 
-      router.push("/profile");
+      router.push("/dashboard");
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
@@ -178,7 +178,7 @@ export default function EditProfilePage() {
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="mb-8">
-          <Link href="/profile" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4">
+          <Link href="/dashboard" className="inline-flex items-center gap-2 text-muted-foreground hover:text-foreground mb-4">
             <ArrowLeft className="h-4 w-4" />
             Back to Profile
           </Link>
@@ -308,7 +308,7 @@ export default function EditProfilePage() {
                     {isLoading ? "Updating..." : "Update Profile"}
                   </Button>
                   
-                  <Button type="button" variant="outline" onClick={() => router.push("/profile")}>
+                  <Button type="button" variant="outline" onClick={() => router.push("/dashboard")}>
                     Cancel
                   </Button>
                 </div>

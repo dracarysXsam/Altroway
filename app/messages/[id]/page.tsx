@@ -2,6 +2,9 @@ import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
 import { ConversationClient } from "./conversation-client";
 
+// Force dynamic rendering to prevent static generation errors
+export const dynamic = 'force-dynamic';
+
 export default async function ConversationPage({ 
   params 
 }: { 
@@ -55,11 +58,22 @@ export default async function ConversationPage({
 
   // Get user information for all participants
   const allUserIds = new Set<string>();
-  if (conversation.job_applications?.applicant_id) {
-    allUserIds.add(conversation.job_applications.applicant_id);
+  
+  // Handle job_applications as array and get the first one
+  const jobApplication = Array.isArray(conversation.job_applications) 
+    ? conversation.job_applications[0] 
+    : conversation.job_applications;
+    
+  // Handle jobs as array and get the first one
+  const job = Array.isArray(jobApplication?.jobs) 
+    ? jobApplication?.jobs[0] 
+    : jobApplication?.jobs;
+    
+  if (jobApplication?.applicant_id) {
+    allUserIds.add(jobApplication.applicant_id);
   }
-  if (conversation.job_applications?.jobs?.employer_id) {
-    allUserIds.add(conversation.job_applications.jobs.employer_id);
+  if (job?.employer_id) {
+    allUserIds.add(job.employer_id);
   }
   conversation.messages?.forEach(message => {
     allUserIds.add(message.sender_id);
@@ -86,9 +100,9 @@ export default async function ConversationPage({
   const conversationWithUsers = {
     ...conversation,
     messages: messagesWithUsers,
-    applicant: userMap.get(conversation.job_applications?.applicant_id),
-    employer: userMap.get(conversation.job_applications?.jobs?.employer_id)
+    applicant: userMap.get(jobApplication?.applicant_id),
+    employer: userMap.get(job?.employer_id)
   };
 
-  return <ConversationClient conversation={conversationWithUsers} currentUserId={user.id} />;
+  return <ConversationClient conversation={conversationWithUsers as any} currentUserId={user.id} />;
 }

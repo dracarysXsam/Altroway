@@ -1,0 +1,50 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[build.environment]
+  NODE_VERSION = "18"
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Handle Next.js routing
+[[redirects]]
+  from = "/dashboard/*"
+  to = "/dashboard"
+  status = 200
+
+[[redirects]]
+  from = "/jobs/*"
+  to = "/jobs"
+  status = 200
+
+[[redirects]]
+  from = "/messages/*"
+  to = "/messages"
+  status = 200
+
+[[redirects]]
+  from = "/profile/*"
+  to = "/profile"
+  status = 200
+
+# API routes
+[[redirects]]
+  from = "/api/*"
+  to = "/api/:splat"
+  status = 200
+
+# Static assets
+[[redirects]]
+  from = "/_next/*"
+  to = "/_next/:splat"
+  status = 200
+
+# Handle authentication callback
+[[redirects]]
+  from = "/auth/*"
+  to = "/auth/:splat"
+  status = 200

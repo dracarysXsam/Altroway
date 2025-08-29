@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button"
-import { MapPin, MessageSquare, Bookmark, Building, Scale } from "lucide-react"
+import { MapPin, MessageSquare, Bookmark, Building, Scale, Users, BookOpen } from "lucide-react"
 import Link from "next/link"
 import { MobileNav } from "./mobile-nav"
 import { UserMenu } from "./user-menu"
@@ -27,7 +27,7 @@ export function Header({ user }: { user: User | null }) {
             </Link>
             {user && (
               <Link href="/dashboard" className="text-gray-600 hover:text-blue-600 transition-colors">
-                Dashboard
+                Profile
               </Link>
             )}
             {user && (
@@ -51,9 +51,9 @@ export function Header({ user }: { user: User | null }) {
                 </Link>
               }
               legalAdvisor={
-                <Link href="/legal" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+                <Link href="/legal-support" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
                   <Scale className="h-4 w-4" />
-                  Legal Portal
+                  Legal Support
                 </Link>
               }
               superAdmin={
@@ -63,11 +63,13 @@ export function Header({ user }: { user: User | null }) {
                 </Link>
               }
             />
-            <Link href="/legal-support" className="text-gray-600 hover:text-blue-600 transition-colors">
-              Legal Support
+            <Link href="/about" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+              <Users className="h-4 w-4" />
+              About
             </Link>
-            <Link href="/research" className="text-gray-600 hover:text-blue-600 transition-colors">
-              Research
+            <Link href="/documentation" className="text-gray-600 hover:text-blue-600 transition-colors flex items-center gap-1">
+              <BookOpen className="h-4 w-4" />
+              Docs
             </Link>
           </nav>
           {/* Auth Buttons */}
